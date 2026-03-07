@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat — EISC Investor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_ai_chat.css') }}">
+</head>
+<body>
+
+    {% set active_nav = 'ai' %}
+    {% include 'auth/investor/sidebar.html' %}
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+<div class="main-wrap">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">AI <span>Chat</span></div>
+            <div class="topbar-subtitle">Get investment guidance or deep-dive on a specific founder's pitch.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!','default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_notifs and unread_notifs > 0 %}<span class="topbar-notif-dot"></span>{% endif %}
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar" title="{{ profile.full_name or profile.username if profile else '' }}">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE -->
+    <div class="page-content chat-page-content">
+        <div class="chat-root">
+
+            <!-- ══ LEFT: Session History ══════════════════════ -->
+            <aside class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <span style="font-size:18px">💎</span>
+                    <h2>AI Chat</h2>
+                    <button class="new-chat-btn" onclick="startNewChat()">+ New</button>
+                </div>
+
+                <!-- Mode tabs for history filtering -->
+                <div class="mode-tabs">
+                    <button class="mode-tab active" id="tab-guidance"
+                            onclick="switchSidebarTab('guidance')">🧠 Guidance</button>
+                    <button class="mode-tab" id="tab-entrepreneur"
+                            onclick="switchSidebarTab('entrepreneur')">🚀 Startup</button>
+                </div>
+
+                <div class="session-list" id="session-list">
+                    <div class="sessions-empty">Start a new chat ↗</div>
+                </div>
+            </aside>
+
+            <!-- ══ MAIN CHAT ══════════════════════════════════ -->
+            <main class="chat-main">
+
+                <div class="chat-topbar">
+                    <div class="chat-mode-badge" id="mode-badge">
+                        <span class="dot"></span>
+                        <span id="mode-badge-text">Guidance Mode</span>
+                    </div>
+                    <span class="chat-topbar-title" id="topbar-title">AI Advisor</span>
+                    <span class="chat-topbar-sub">
+                        {{ profile.full_name or profile.firm_name or profile.username if profile else 'Investor' }}
+                    </span>
+                </div>
+
+                <div class="messages-area" id="messages-area">
+                    <div class="welcome-state" id="welcome-state">
+                        <div class="welcome-icon">💎</div>
+                        <h3>Your AI Investment Advisor</h3>
+                        <p>
+                            Get deal evaluation help, due diligence checklists, market research,
+                            term sheet guidance — or select a founder to analyse their pitch against your thesis.
+                        </p>
+                        <div class="quick-prompts" id="quick-prompts">
+                            <button class="quick-chip" onclick="useQuickPrompt(this)">Evaluate this deal for me</button>
+                            <button class="quick-chip" onclick="useQuickPrompt(this)">What should I check in due diligence?</button>
+                            <button class="quick-chip" onclick="useQuickPrompt(this)">Help me think about valuation</button>
+                            <button class="quick-chip" onclick="useQuickPrompt(this)">What red flags should I watch for?</button>
+                            <button class="quick-chip" onclick="useQuickPrompt(this)">How do I structure a term sheet?</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input bar -->
+                <div class="chat-input-bar">
+
+                    <!-- Selected entrepreneur strip (shown when entrepreneur mode active) -->
+                    <div id="selected-entrepreneur-strip" style="display:none"></div>
+
+                    <div class="input-wrapper">
+                        <div style="position:relative;">
+                            <button class="plus-btn" id="plus-btn" onclick="toggleModePopup(event)">＋</button>
+
+                            <!-- Mode popup -->
+                            <div class="mode-popup" id="mode-popup">
+                                <div class="popup-section-label">Chat Mode</div>
+
+                                <!-- Guidance option -->
+                                <button class="popup-option active-mode" id="opt-guidance"
+                                        onclick="selectMode('guidance')">
+                                    <div class="popup-option-icon">🧠</div>
+                                    <div class="popup-option-text">
+                                        <strong>Guidance Mode</strong>
+                                        <span>AI advisor for deal flow, DD &amp; strategy</span>
+                                    </div>
+                                </button>
+
+                                <div class="popup-divider"></div>
+                                <div class="popup-section-label">Startup Intermediary</div>
+
+                                {% if saved_startups %}
+                                    <div class="entrepreneur-list-scroll">
+                                        {% for ent in saved_startups %}
+                                        <button class="entrepreneur-option"
+                                                data-email="{{ ent.entrepreneur_email }}"
+                                                onclick="selectEntrepreneur(
+                                                    '{{ ent.entrepreneur_email }}',
+                                                    '{{ (ent.entrepreneur_name or ent.startup_name or ent.entrepreneur_email) | replace("'","") }}',
+                                                    '{{ ent.startup_name or '' }}',
+                                                    '{{ ent.profile_image_url or '' }}',
+                                                    this
+                                                )">
+                                            <div class="ent-avatar">
+                                                {% if ent.profile_image_url %}
+                                                    <img src="{{ ent.profile_image_url }}" alt="">
+                                                {% else %}
+                                                    {{ (ent.entrepreneur_name or ent.startup_name or 'E')[0].upper() }}
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="ent-name">{{ ent.entrepreneur_name or ent.startup_name or ent.entrepreneur_email }}</div>
+                                                <div class="ent-startup">{{ ent.startup_name or ent.industry or 'Startup' }}</div>
+                                            </div>
+                                            <div class="ent-status-dot"></div>
+                                        </button>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="no-entrepreneurs-hint">
+                                        No connected founders yet.<br>
+                                        Express interest in startups to use this mode.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <textarea id="chat-textarea"
+                                  placeholder="Ask your AI advisor anything…"
+                                  rows="1"
+                                  onkeydown="handleKey(event)"
+                                  oninput="autoResize(this)"></textarea>
+
+                        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2.5"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="input-hint">AI may make mistakes. Always verify before making investment decisions.</div>
+                </div>
+
+            </main>
+        </div><!-- /chat-root -->
+    </div><!-- /page-content -->
+</div><!-- /main-wrap -->
+
+
+<!-- Premium Modal -->
+<div class="modal-overlay" id="premiumModal">
+    <div class="modal" style="width:500px">
+        <div class="modal-header">
+            <div class="modal-header-title">⭐ Upgrade to Premium</div>
+            <button class="modal-close" data-close-modal="premiumModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body" style="text-align:center;padding:24px">
+            <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#f59e0b,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px">
+                Unlock Premium Investor Access
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:20px">
+                Unlimited AI chats, advanced deal analysis, priority deal flow.
+            </p>
+            <button onclick="showToast('Payment integration coming soon!','default')"
+                    style="display:block;width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:var(--r-md);font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">
+                ⭐ Get Started
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Page config for JS -->
+<script>
+    const INV_PROFILE_IMAGE = "{{ profile.profile_image_url or '' }}";
+    const INV_USERNAME      = "{{ profile.full_name or profile.username or 'Investor' }}";
+</script>
+
+<script src="{{ url_for('static', filename='js/investor/investor_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/investor/investor_ai_chat.js') }}"></script><script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script></body>
+</html>

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}SEIC | Smart Entrepreneur Investor Connect{% endblock %}
+
+{% block style %}
+    {{ super() }}
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_dashboard.css') }}">
+{% endblock %}
+
+
+
+{% block content %}
+
+{% set active_nav = 'deals' %}
+{% include 'auth/investor/sidebar.html' %}
+
+<div class="main-wrap">
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">Deal <span>Track</span></div>
+            <div class="topbar-subtitle">Monitor your investment pipeline from introduction to close.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!','default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+        <!-- Stage Summary Cards -->
+        <div class="stats-row">
+            <div class="card stat-card anim anim-1">
+                <div class="stat-card-left">
+                    <div class="stat-card-label">Pipeline Overview</div>
+                    <div class="stat-card-sub teal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        {{ deals|length }} Total Deals
+                    </div>
+                </div>
+                <div class="stat-card-right">
+                    <div class="score-shield teal-shield">
+                        <div class="score-shield-bg">
+                            <div class="score-shield-num">{{ deals|length }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% set stage_names = {
+                'introduced': '📋 Introduced',
+                'in_discussion': '💬 In Discussion',
+                'due_diligence': '🔍 Due Diligence',
+                'term_sheet': '📄 Term Sheet',
+                'closed': '✅ Closed'
+            } %}
+
+            {% for stage_key, stage_name in stage_names.items() %}
+            <div class="card stat-card anim anim-{{ loop.index + 1 }}">
+                <div class="stat-card-label">{{ stage_name }}</div>
+                <div class="stat-card-sub">{{ stage_counts.get(stage_key, 0) }} deals</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Deals List -->
+        <div class="deals-table anim anim-1" style="margin-top: 20px">
+            <div style="overflow-x: auto">
+                <table style="width:100%; border-collapse:collapse">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #e5e7eb">
+                            <th style="text-align:left; padding:12px; font-weight:700; color:#374151; font-size:0.85rem">Startup</th>
+                            <th style="text-align:left; padding:12px; font-weight:700; color:#374151; font-size:0.85rem">Founder</th>
+                            <th style="text-align:left; padding:12px; font-weight:700; color:#374151; font-size:0.85rem">Stage</th>
+                            <th style="text-align:right; padding:12px; font-weight:700; color:#374151; font-size:0.85rem">Amount</th>
+                            <th style="text-align:right; padding:12px; font-weight:700; color:#374151; font-size:0.85rem">Equity %</th>
+                            <th style="text-align:left; padding:12px; font-weight:700; color:#374151; font-size:0.85rem">Updated</th>
+                            <th style="text-align:right; padding:12px; font-weight:700; color:#374151; font-size:0.85rem">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if deals %}
+                            {% for deal in deals %}
+                            <tr style="border-bottom: 1px solid #f3f4f6; hover: { background: #f9fafb }">
+                                <td style="padding:12px; font-weight:600; color:#111827">
+                                    <div style="display:flex; align-items:center; gap:8px">
+                                        <img src="{{ deal.profile_image_url or '' }}" alt="" style="width:32px; height:32px; border-radius:50%; object-fit:cover; background:#e5e7eb">
+                                        <div>{{ deal.startup_name or 'Unnamed' }}</div>
+                                    </div>
+                                </td>
+                                <td style="padding:12px; color:#6b7280; font-size:0.9rem">{{ deal.username or '—' }}</td>
+                                <td style="padding:12px">
+                                    <span style="display:inline-block; padding:4px 10px; background:#f0f9ff; color:#0369a1; border-radius:4px; font-size:0.8rem; font-weight:600">
+                                        {{ deal.deal_stage.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td style="padding:12px; text-align:right; color:#111827; font-weight:600">
+                                    {% if deal.deal_value %}
+                                        ₹{{ '{:,.0f}'.format(deal.deal_value) }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td style="padding:12px; text-align:right; color:#111827; font-weight:600">
+                                    {% if deal.equity_offered %}
+                                        {{ deal.equity_offered }}%
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td style="padding:12px; color:#6b7280; font-size:0.9rem">
+                                    {% if deal.updated_at %}
+                                        {{ deal.updated_at.strftime('%b %d, %Y') }}
+                                    {% else %}
+                                        {{ deal.created_at.strftime('%b %d, %Y') }}
+                                    {% endif %}
+                                </td>
+                                <td style="padding:12px; text-align:right">
+                                    <button onclick="editDeal({{ deal.deal_id }})" style="padding:6px 12px; background:#4f46e5; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer; font-weight:600">
+                                        Update
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="padding:30px; text-align:center; color:#9ca3af">
+                                <div style="font-size:1.5rem; margin-bottom:8px">📊</div>
+                                <div style="font-weight:600; color:#6b7280">No deals yet</div>
+                                <div style="font-size:0.9rem; color:#9ca3af; margin-top:4px">Start by expressing interest in matched startups</div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /page-content -->
+</div><!-- /main-wrap -->
+
+<div class="toast-container" id="toastContainer"></div>
+{% endblock %}
+
+
+{% block script %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script>
+    function editDeal(dealId) {
+        showToast('Deal update coming soon!', 'default');
+        // TODO: Implement deal update modal
+    }
+    </script>
+{% endblock %}

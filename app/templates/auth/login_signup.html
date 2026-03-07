@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% block title %}Authentication - EISC{% endblock %}
+
+{% block style %}
+{{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login_signup.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:ital,wght@0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    {{super()}}
+
+    <div class="main-wrapper">
+        <a href="{{ url_for('home_auth.home') }}" class="back-home-btn">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+
+        <input type="hidden" id="redirect_to" value="{{ redirect_to }}">
+
+        <div class="container" id="container">
+            
+            <div class="form-container sign-up-container">
+                <form id="signup-form" onsubmit="handleSignup(event)">
+                    
+                    <div class="logo-section-inline">
+                        <img src="{{ url_for('static', filename='images/app_logo.png') }}" alt="EISC Logo" class="logo-image">
+                        <span class="logo-text">SEIC</span>
+                    </div>
+
+                    <h2>Create Account</h2>
+                    
+                    <div class="social-icons">
+                        <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-google"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                    <span class="muted-text">or use your email for registration:</span>
+
+                    <div class="scrollable-inputs">
+                        <div class="input-box">
+                            <i class="fas fa-user"></i>
+                            <input id="signup-username" name="username" type="text" placeholder="Full Name" required>
+                        </div>
+                        <div class="input-box">
+                            <i class="fas fa-envelope"></i>
+                            <input id="signup-email" name="email" type="email" placeholder="Email" required>
+                        </div>
+                        <div class="input-box">
+                            <i class="fas fa-calendar-alt"></i>
+                            <input id="signup-age" name="age" type="number" placeholder="Age" min="1" max="150" required>
+                        </div>
+                        <div class="input-box">
+                            <i class="fas fa-venus-mars"></i>
+                            <select id="signup-gender" name="gender" required>
+                                <option value="" disabled selected>Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="input-box">
+                            <i class="fas fa-user-tag"></i>
+                            <select id="signup-role" name="role" required>
+                                <option value="" disabled selected>Select Role</option>
+                                <option value="entrepreneur">Entrepreneur</option>
+                                <option value="investor">Investor</option>
+                                <!-- <option value="admin">Admin</option> -->
+                            </select>
+                        </div>
+                        <div class="input-box">
+                            <i class="fas fa-lock"></i>
+                            <input id="signup-password" name="password" type="password" placeholder="Password" minlength="6" required>
+                        </div>
+                        <div class="input-box">
+                            <i class="fas fa-lock"></i>
+                            <input id="signup-confirm-password" name="confirm_password" type="password" placeholder="Confirm Password" required>
+                        </div>
+                    </div>
+
+                    <div class="terms-wrapper">
+                        <label class="terms-label">
+                            <input type="checkbox" id="signup-terms" required>
+                            <span class="custom-checkbox"></span>
+                            I agree to the
+                            <a href="#" class="terms-link" onclick="openTermsModal(event)">Terms &amp; Policies</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn" id="signup-btn">Sign Up</button>
+                    <div class="mobile-toggle" style="padding-bottom: 10px;">Already have an account? <a href="#" onclick="toggleForm(event)">Sign In</a></div>
+                </form>
+            </div>
+
+            <div class="form-container sign-in-container">
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    
+                    <div class="logo-section-inline">
+                        <img src="{{ url_for('static', filename='images/app_logo.png') }}" alt="EISC Logo" class="logo-image">
+                        <span class="logo-text">SEIC</span>
+                    </div>
+
+                    <h2>Sign in to SEIC</h2>
+                    
+                    <div class="social-icons">
+                        <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-google"></i></a>
+                        <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                    <span class="muted-text">or use your email account:</span>
+
+                    <div class="input-box">
+                        <i class="fas fa-envelope"></i>
+                        <input id="login-email" name="email" type="email" placeholder="Email Address" required>
+                    </div>
+                    <div class="input-box">
+                        <i class="fas fa-user-tag"></i>
+                        <select id="login-role" name="role" required>
+                            <option value="" disabled selected>Select Role</option>
+                            <option value="entrepreneur">Entrepreneur</option>
+                            <option value="investor">Investor</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="input-box">
+                        <i class="fas fa-lock"></i>
+                        <input id="login-password" name="password" type="password" placeholder="Password" required>
+                    </div>
+
+                    <a href="#" class="forgot-password">Forgot your password?</a>
+                    <button type="submit" class="btn" id="login-btn">Sign In</button>
+                    <div class="mobile-toggle">Don't have an account? <a href="#" onclick="toggleForm(event)">Sign Up</a></div>
+                </form>
+            </div>
+
+            <div class="overlay-container">
+                <div class="overlay">
+                    <div class="overlay-panel overlay-left">
+                        <h1 style="color: white;">Welcome Back!</h1>
+                        <p style="color: white;">Stay connected and keep building</p>
+                        <button class="ghost-btn" id="signIn" onclick="toggleForm(event)">Sign In</button>
+                    </div>
+                    <div class="overlay-panel overlay-right">
+                        <h1 style="color: white;">Let's Begin</h1>
+                        <p style="color: white;">Set up your profile and start your journey toward meaningful connections and easy funding</p>
+                        <button class="ghost-btn" id="signUp" onclick="toggleForm(event)">Sign Up</button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- ===== Terms & Policies Modal ===== -->
+    <div id="terms-modal" class="terms-modal-overlay" onclick="closeTermsModal(event)">
+        <div class="terms-modal-box">
+            <button class="terms-modal-close" onclick="closeTermsModal()">&times;</button>
+            <h2 class="terms-modal-title">Terms &amp; Policies</h2>
+            <div class="terms-modal-body">
+
+            <h3>1. Acceptance of Terms</h3>
+            <p>By creating an account on SEIC, you confirm that you have read, understood, and agree to be bound by these Terms &amp; Policies. If you do not agree, please do not register.</p>
+
+            <h3>2. Eligibility</h3>
+            <p>You must be at least 18 years of age to use this platform. By registering, you represent and warrant that you meet this requirement.</p>
+
+            <h3>3. Account Responsibilities</h3>
+            <p>You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. Notify us immediately of any unauthorized use.</p>
+
+            <h3>4. Privacy Policy</h3>
+            <p>Your personal information is collected and processed in accordance with our Privacy Policy. We do not sell your data to third parties. Information may be used to improve platform features and send relevant communications.</p>
+
+            <h3>5. Acceptable Use</h3>
+            <p>You agree not to misuse the platform, including but not limited to: posting false information, engaging in fraudulent activity, harassing other users, or attempting to breach system security.</p>
+
+            <h3>6. Investor &amp; Entrepreneur Roles</h3>
+            <p>SEIC facilitates connections between entrepreneurs and investors. We do not guarantee investment outcomes, business success, or the accuracy of information provided by other users. Perform your own due diligence before making any financial decisions.</p>
+
+            <h3>7. Intellectual Property</h3>
+            <p>All platform content, branding, and software are the property of SEIC. Users retain ownership of content they submit but grant SEIC a non-exclusive license to display it on the platform.</p>
+
+            <h3>8. Termination</h3>
+            <p>We reserve the right to suspend or terminate accounts that violate these terms without prior notice.</p>
+
+            <h3>9. Changes to Terms</h3>
+            <p>These terms may be updated periodically. Continued use of the platform after changes are posted constitutes your acceptance of the revised terms.</p>
+
+            <h3>10. Contact</h3>
+            <p>For questions regarding these terms, please contact us at <a href="mailto:support@seic.com">support@seic.com</a>.</p>
+
+            <!-- ================= NEW LEGAL & COMPLIANCE SECTIONS ================= -->
+
+            <h3>11. Startup &amp; Investment Regulations</h3>
+            <p><strong>SEBI Guidelines:</strong> SEIC operates in alignment with the SEBI (Investment Advisers) Regulations, 2013 where applicable. The platform functions as a matchmaking and networking facilitator and does not provide regulated investment advisory services unless explicitly stated.</p>
+
+            <p><strong>Startup India Policies:</strong> If recognized under Startup India, SEIC may avail benefits including funding support, compliance assistance, and potential tax exemptions, subject to eligibility criteria defined by the Government of India.</p>
+
+            <h3>12. Data Protection &amp; Privacy Compliance</h3>
+            <p><strong>Digital Personal Data Protection Act, 2023:</strong> SEIC collects, stores, and processes personal and financial information in accordance with applicable Indian data protection laws. User consent is obtained prior to data processing, and users retain rights to access, correction, and deletion of their data.</p>
+
+            <p><strong>Information Technology Act, 2000 &amp; SPDI Rules:</strong> Sensitive personal data is protected through reasonable security practices. In case of a data breach, appropriate notification and remedial mechanisms will be followed as required by law.</p>
+
+            <h3>13. Payment &amp; Financial Compliance</h3>
+            <p><strong>RBI Guidelines:</strong> All monetary transactions, if facilitated through the platform, shall be processed using RBI-authorized and compliant payment gateways.</p>
+
+            <p><strong>Income Tax &amp; Angel Tax Regulations:</strong> Where applicable, entrepreneurs and investors are responsible for maintaining accurate documentation for tax reporting and compliance with relevant Income Tax provisions.</p>
+
+            <h3>14. Intellectual Property &amp; Legal Ownership</h3>
+            <p>Users retain ownership of their pitch decks, business ideas, trademarks, and proprietary content uploaded to the platform. By submitting content, users grant SEIC a limited, non-exclusive, and revocable license to display such content for matchmaking and promotional purposes.</p>
+
+            <p>AI-enhanced insights, recommendations, or matchmaking outputs generated by SEIC are provided for informational purposes only and do not constitute financial, legal, or professional advice.</p>
+            </div>
+            <div class="terms-modal-footer">
+                <button class="btn" style="max-width:180px;" onclick="acceptTerms()">I Agree</button>
+                <button class="ghost-btn-dark" onclick="closeTermsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    </div>
+{% endblock %}
+
+{% block script %}
+    {{ super() }}
+
+    <script>
+        window.toggleForm = function(event) {
+            event.preventDefault();
+            const container = document.getElementById('container');
+            // This class triggers the CSS sliding animations
+            container.classList.toggle('right-panel-active');
+        };
+
+        window.openTermsModal = function(event) {
+            if (event) event.preventDefault();
+            document.getElementById('terms-modal').classList.add('active');
+        };
+
+        window.closeTermsModal = function(event) {
+            // If clicking the overlay background itself, close
+            if (event && event.target !== document.getElementById('terms-modal')) return;
+            document.getElementById('terms-modal').classList.remove('active');
+        };
+
+        window.acceptTerms = function() {
+            document.getElementById('signup-terms').checked = true;
+            document.getElementById('terms-modal').classList.remove('active');
+        };
+    </script>
+
+    <script>
+        window.handleLogin = async function(event) {
+            event.preventDefault();
+
+            const email    = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const role     = document.getElementById('login-role').value;
+            const btn      = document.getElementById('login-btn');
+
+            if (!email || !password || !role) {
+                showToast('Please fill in all fields.', 'error');
+                return;
+            }
+
+            btn.disabled    = true;
+            btn.textContent = 'Logging in…';
+
+            try {
+                const res  = await fetch('/login', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ email, password, role })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(data.message || 'Login successful! Redirecting…', 'success');
+                    setTimeout(() => window.location.href = data.redirect_url, 1000);
+                } else if (data.redirect_to_verify) {
+                    showToast(data.message, 'warning');
+                    setTimeout(() => window.location.href = '/verify', 1500);
+                } else {
+                    showToast(data.message || 'Login failed. Please try again.', 'error');
+                }
+            } catch (err) {
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                btn.disabled    = false;
+                btn.textContent = 'Sign In';
+            }
+        };
+    </script>
+
+    <script>
+        window.handleSignup = async function(event) {
+            event.preventDefault();
+
+            const username        = document.getElementById('signup-username').value.trim();
+            const email           = document.getElementById('signup-email').value.trim();
+            const age             = document.getElementById('signup-age').value;
+            const gender          = document.getElementById('signup-gender').value;
+            const role            = document.getElementById('signup-role').value;
+            const password        = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+            const btn             = document.getElementById('signup-btn');
+
+            if (!username || !email || !age || !gender || !role || !password || !confirmPassword) {
+                showToast('Please fill in all fields.', 'error');
+                return;
+            }
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match.', 'error');
+                return;
+            }
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters.', 'error');
+                return;
+            }
+
+            btn.disabled    = true;
+            btn.textContent = 'Creating account…';
+
+            try {
+                const res  = await fetch('/signup', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ username, email, age: parseInt(age), gender, role, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => window.location.href = '/verify', 1800);
+                } else {
+                    showToast(data.message || 'Sign up failed. Please try again.', 'error');
+                }
+            } catch (err) {
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                btn.disabled    = false;
+                btn.textContent = 'Sign Up';
+            }
+        };
+    </script>
+{% endblock %}

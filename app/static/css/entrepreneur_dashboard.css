@@ -1,0 +1,436 @@
+/* ================================================================
+   SEIC PLATFORM — Premium Dashboard CSS (Vibrant SaaS Theme)
+   Font: Inter (body) + Montserrat (headings)
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap');
+
+:root {
+    --bg-app: #f4f7fa;          
+    --bg-white: #ffffff;        
+    --sidebar-bg: #0f172a;      
+    --sidebar-border: #1e293b;
+    --sidebar-text: #94a3b8;
+    --sidebar-text-hover: #ffffff;
+    --text-main: #1e293b;       
+    --text-muted: #64748b;      
+    --border-light: #e2e8f0;
+    --primary: #3b82f6;         
+    --primary-hover: #2563eb;
+    --gradient-primary: linear-gradient(135deg, #3b82f6, #6366f1);
+    --gradient-premium: linear-gradient(135deg, #f59e0b, #ec4899);
+    
+    --green-bg: #dcfce3; --green-text: #10b981;
+    --amber-bg: #fef3c7; --amber-text: #f59e0b;
+    --blue-bg:  #eff6ff; --blue-text:  #3b82f6;
+    --slate-bg: #f1f5f9; --slate-text: #475569;
+    --teal-bg:  #f0fdfa; --teal-text:  #0ea5e9;
+    
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-xl: 24px;
+    --r-full: 9999px;
+    
+    --shadow-sm: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+    --shadow-card: 0 12px 32px -4px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+    --shadow-hover: 0 24px 48px -12px rgba(59, 130, 246, 0.15), 0 12px 24px -6px rgba(15, 23, 42, 0.08);
+    --shadow-sidebar: 4px 0 24px rgba(15, 23, 42, 0.08);
+    
+    --sidebar-w: 260px;
+    --header-h: 80px;
+}
+
+/* ── Reset & Safeguards ────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-app);
+    background-image: radial-gradient(circle at 100% 0%, #e0e8f5 0%, transparent 40%);
+    background-attachment: fixed;
+    color: var(--text-main);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; }
+
+svg { 
+    flex-shrink: 0 !important; 
+    max-width: 24px; 
+    max-height: 24px; 
+    display: inline-block; 
+    vertical-align: middle; 
+}
+
+/* ================================================================
+   1. SIDEBAR
+   ================================================================ */
+.sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--sidebar-w); height: 100vh;
+    background: var(--sidebar-bg);
+    display: flex; flex-direction: column;
+    z-index: 50; box-shadow: var(--shadow-sidebar);
+    border-right: 1px solid var(--sidebar-border);
+}
+
+.sidebar-logo {
+    display: flex; align-items: center; justify-content: flex-start;
+    padding: 30px 24px 20px; gap: 12px;
+}
+.sidebar-logo-icon {
+    width: 36px; height: 36px; border-radius: var(--r-md);
+    background: var(--gradient-primary); color: var(--bg-white);
+    display: flex; align-items: center; justify-content: center;
+}
+.sidebar-logo-text {
+    font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 800;
+    color: var(--bg-white); letter-spacing: -0.5px;
+}
+.sidebar-logo-text span { color: var(--primary); }
+
+.sidebar-nav {
+    flex: 1; padding: 10px 16px; display: flex; flex-direction: column; gap: 6px;
+    overflow-y: auto;
+}
+.nav-section-label {
+    font-size: 0.75rem; font-weight: 700; color: #475569;
+    letter-spacing: 1px; text-transform: uppercase; padding: 16px 12px 8px;
+}
+.nav-link {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+    border-radius: var(--r-md); color: var(--sidebar-text);
+    font-size: 0.95rem; font-weight: 500; transition: all 0.2s;
+    border-left: 3px solid transparent; 
+}
+.nav-link:hover { background: rgba(255,255,255,0.05); color: var(--sidebar-text-hover); }
+.nav-link.active { 
+    background: rgba(59, 130, 246, 0.15); 
+    color: #60a5fa; font-weight: 600; 
+    border-left: 3px solid var(--primary);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+}
+
+.sidebar-footer { padding: 24px 20px; border-top: 1px solid var(--sidebar-border); }
+.upgrade-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px; border: none; border-radius: var(--r-md);
+    background: var(--gradient-premium); color: var(--bg-white);
+    font-size: 0.9rem; font-weight: 700; cursor: pointer;
+}
+
+/* ================================================================
+   2. MAIN LAYOUT
+   ================================================================ */
+.main-wrap { margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-height: 100vh;}
+
+.topbar {
+    height: var(--header-h); padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    background-color: rgb(19, 29, 53);
+    color: var(--bg-white);
+    margin-bottom: 10px;
+}
+.topbar-page-title {
+    font-family: 'Montserrat', sans-serif; font-size: 1.6rem; font-weight: 700;
+    color: var(--text-main); line-height: 1.1;
+    color: rgb(255, 237, 202);
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 14px; }
+
+.sidebar-toggle-btn {
+    display: none; 
+    background: transparent; border: none; 
+    color: var(--bg-white); padding: 8px; 
+    border-radius: var(--r-md); cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.sidebar-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1); color: var(--primary);
+}
+
+/* ================================================================
+   3. BULLEDOZER LAYOUT ALIGNMENTS (The Fix)
+   ================================================================ */
+.page-content { 
+    padding: 0 40px 40px; 
+    max-width: 1400px; 
+    margin: 0 auto; 
+    width: 100%;
+}
+
+.card {
+    background: var(--bg-white); 
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-card); 
+    border: 1px solid rgba(226, 232, 240, 0.8); 
+    position: relative; 
+    overflow: hidden; 
+    margin-bottom: 24px;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+.card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 30px; border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    background: linear-gradient(to right, rgba(248, 250, 252, 0.5), transparent);
+}
+.card-title { 
+    font-family: 'Montserrat', sans-serif; 
+    font-size: 1.2rem; 
+    font-weight: 800; 
+    color: var(--text-main); 
+    letter-spacing: -0.2px;
+}
+
+/* STATS ROW GRID RESTORATION */
+.stats-row { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 24px; 
+    margin-bottom: 32px; 
+}
+
+/* AGGRESSIVE FLEXBOX FOR INTERNAL ELEMENTS */
+.deal-tracker-stages,
+.pitch-materials-grid,
+.performance-score-grid { 
+    display: flex !important; 
+    flex-wrap: nowrap !important;
+    gap: 16px !important; 
+    padding: 24px !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    align-items: stretch !important;
+}
+
+.deal-stage,
+.pitch-material-item,
+.performance-score-col {
+    flex: 1 1 0px !important; 
+    min-width: 0 !important; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+
+/* Deal Stage Specifics */
+.deal-stage { align-items: center; justify-content: center; gap: 12px; }
+.deal-stage-pill { display: flex; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; width: 100%; text-align: center; letter-spacing: 0.3px; transition: all 0.2s ease; gap: 8px;}
+.deal-stage-pill svg { width: 16px; height: 16px; }
+.deal-stage-count { font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--text-main); line-height: 1; margin-top: 5px; }
+
+.stage-introduced { background: rgba(59, 130, 246, 0.1); color: var(--blue-text); border: 1px solid rgba(59, 130, 246, 0.2); }
+.stage-discussion { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.2); }
+.stage-diligence { background: rgba(245, 158, 11, 0.1); color: var(--amber-text); border: 1px solid rgba(245, 158, 11, 0.2); }
+.stage-termsheet { background: rgba(16, 185, 129, 0.1); color: var(--green-text); border: 1px solid rgba(16, 185, 129, 0.2); }
+.stage-closed { background: var(--sidebar-bg); color: white; border: 1px solid var(--sidebar-border); }
+
+/* Stat Card Specifics */
+.stat-card { 
+    padding: 30px; 
+    box-shadow: var(--shadow-card); 
+    border-radius: var(--r-xl); 
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5); 
+    position: relative; 
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
+    gap: 20px;
+    height: 100%;
+}
+.stat-card:hover { 
+    transform: translateY(-6px); 
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(59, 130, 246, 0.4);
+    background: rgba(255, 255, 255, 1);
+}
+.stat-card-left {
+    flex: 1;
+}
+.stat-card-right {
+    flex-shrink: 0;
+}
+.stat-card-label { 
+    font-size: 0.85rem; 
+    font-weight: 700; 
+    color: var(--text-muted); 
+    text-transform: uppercase; 
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+.stat-card-sub {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.stat-card-sub.green { color: var(--green-text); }
+.stat-card-sub.blue { color: var(--blue-text); }
+.stat-card-sub.amber { color: var(--amber-text); }
+
+.stat-card-value { 
+    font-family: 'Montserrat', sans-serif; 
+    font-size: 2.5rem; 
+    font-weight: 900; 
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.score-shield {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.score-shield-bg {
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-primary);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+}
+.score-shield-num {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: white;
+}
+
+.stat-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 8px;
+}
+.stat-tag.green { background: var(--green-bg); color: var(--green-text); }
+.stat-tag.blue { background: var(--blue-bg); color: var(--blue-text); }
+.stat-tag.amber { background: var(--amber-bg); color: var(--amber-text); }
+.stat-tag.teal { background: var(--teal-bg); color: var(--teal-text); }
+
+
+/* Pitch Materials Specifics */
+.pitch-material-item { 
+    align-items: center; gap: 14px; padding: 24px 16px; 
+    background: linear-gradient(180deg, var(--bg-white) 0%, #f8fafc 100%); 
+    border-radius: var(--r-lg); 
+    border: 1px solid var(--border-light); 
+    text-align: center; 
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+}
+.pitch-material-item:hover {
+    border-color: var(--primary);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -10px rgba(59, 130, 246, 0.3);
+}
+.pitch-material-icon { width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: var(--bg-white); box-shadow: var(--shadow-sm); margin-bottom: 8px; }
+.icon-deck { background: var(--gradient-primary); }
+.icon-finance { background: linear-gradient(135deg, #10b981, #059669); }
+.icon-video { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+/* Dashboard Sections Layout */
+.dashboard-sections { display: flex; flex-direction: column; gap: 24px; align-items: stretch; }
+.right-column { display: flex; flex-direction: column; gap: 24px; }
+
+/* Investors List */
+.investor-row { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border-light); transition: background 0.2s ease;}
+.investor-row:hover { background: rgba(59, 130, 246, 0.02); }
+.investor-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--bg-white); box-shadow: var(--shadow-sm); border: 2px solid var(--bg-white); }
+.investor-info { flex: 1; }
+.investor-name { font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px;}
+.investor-role { font-size: 0.85rem; color: var(--text-muted); }
+.investor-badge { padding: 6px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; background: var(--slate-bg); color: var(--slate-text); }
+
+/* Meetings & Empty States */
+.empty-state-compact { padding: 40px; text-align: center; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.empty-state-compact-icon { width: 48px; height: 48px; background: var(--slate-bg); color: var(--slate-text); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.empty-state-compact-icon svg { width: 24px; height: 24px; }
+.empty-state-compact-text { font-weight: 500; font-size: 0.95rem; }
+
+.manage-schedule-btn { width: 100%; padding: 16px; border: 1px dashed var(--border-light); background: transparent; color: var(--primary); font-weight: 600; border-radius: 0 0 var(--r-xl) var(--r-xl); transition: all 0.2s; }
+.manage-schedule-btn:hover { background: rgba(59, 130, 246, 0.05); border-color: var(--primary); }
+
+.meeting-item { padding: 20px 30px; border-bottom: 1px solid rgba(226, 232, 240, 0.6); transition: background 0.2s ease; }
+.meeting-item:hover { background: rgba(245, 158, 11, 0.02); }
+.meeting-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.meeting-datetime { font-weight: 700; color: var(--amber-text); font-size: 0.9rem; }
+.meeting-cal-icon { color: var(--text-muted); opacity: 0.5; }
+.meeting-desc { font-size: 1rem; color: var(--text-main); }
+.meeting-desc strong { color: var(--primary); }
+
+/* Mobile Responsive Override */
+@media (max-width: 1024px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .deal-tracker-stages, .pitch-materials-grid { flex-wrap: wrap !important; }
+}
+@media (max-width: 768px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .sidebar { transform: translateX(-100%); width: 280px; transition: transform 0.3s ease; }
+    .sidebar.active { transform: translateX(0); }
+    .main-wrap { margin-left: 0; }
+    .sidebar-toggle-btn { display: flex; align-items: center; justify-content: center; }
+}
+
+/* Modal Overlay Base */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.modal-overlay.open {
+    display: flex;
+    opacity: 1;
+}
+
+/* Modal Window */
+.modal {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.modal-overlay.open .modal {
+    transform: translateY(0);
+}

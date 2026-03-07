@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — User Authorization</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 { color: #2c3e50; font-size: 1.5rem; }
+        
+        .navbar-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .navbar-right span { color: #666; }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .logout-btn:hover { background: #c82333; }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .header {
+            margin-bottom: 2rem;
+        }
+        
+        .header h2 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .role-entrepreneur {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .role-investor {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .btn-approve {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-approve:hover {
+            background: #218838;
+        }
+        
+        .btn-reject {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-reject:hover {
+            background: #c82333;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .empty-message h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: -100px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: #28a745;
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: bottom 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            bottom: 20px;
+        }
+        
+        .toast.error {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+    <h1>EISC Admin</h1>
+    <div class="navbar-right">
+        <span>Welcome, <strong>{{ admin_username }}</strong></span>
+        <a href="{{ url_for('login_signup_auth.logout') }}" class="logout-btn">Logout</a>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <div class="header">
+        <h2>User Authorization</h2>
+        <p>Review and authorize or reject new user registrations</p>
+    </div>
+    
+    <!-- Table -->
+    <div class="table-container">
+        {% if users %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Registered</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr data-email="{{ user.email }}">
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <span class="role-badge role-{{ user.role }}">
+                            {{ user.role|capitalize }}
+                        </span>
+                    </td>
+                    <td>{{ user.created_at }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-approve" onclick="authorizeUser('{{ user.email }}', '{{ user.username }}')">
+                                Authorize
+                            </button>
+                            <button class="btn btn-reject" onclick="rejectUser('{{ user.email }}', '{{ user.username }}')">
+                                Reject
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-message">
+            <h3>No pending users</h3>
+            <p>All users have been authorized or rejected.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<script>
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type}`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    function authorizeUser(email, username) {
+        if (!confirm(`Authorize ${username}?`)) return;
+        
+        fetch('{{ url_for("admin_verification.approve_user") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            showToast(data.message, data.success ? 'success' : 'error');
+            if (data.success) {
+                setTimeout(() => location.reload(), 1000);
+            }
+        })
+        .catch(err => showToast('Error occurred', 'error'));
+    }
+    
+    function rejectUser(email, username) {
+        if (!confirm(`Reject and delete ${username}'s account?`)) return;
+        
+        fetch('{{ url_for("admin_verification.reject_user") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            showToast(data.message, data.success ? 'success' : 'error');
+            if (data.success) {
+                setTimeout(() => location.reload(), 1000);
+            }
+        })
+        .catch(err => showToast('Error occurred', 'error'));
+    }
+</script>
+
+</body>
+</html>
+</head>
+<body>
+
+<!-- ================================================================
+     ADMIN NAVBAR
+     ================================================================ -->
+<nav class="admin-nav">
+    <div class="admin-nav-container">
+        <div class="admin-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="logo-icon">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+            </svg>
+            <span class="logo-text">EISC Admin</span>
+        </div>
+        <div class="admin-nav-right">
+            <span class="admin-welcome">Welcome, {{ admin_username }}</span>
+            <a href="{{ url_for('login_signup_auth.admin_dashboard') }}" class="admin-nav-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Dashboard
+            </a>
+            <a href="{{ url_for('login_signup_auth.logout') }}" class="admin-nav-btn logout">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+                Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- ================================================================
+     MAIN PAGE CONTAINER
+     ================================================================ -->
+<div class="admin-page-wrapper">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         HEADER & FILTERS
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="admin-header">
+        <div class="admin-header-content">
+            <div>
+                <h1 class="admin-page-title">User Verification</h1>
+                <p class="admin-page-subtitle">Review and approve new user registrations</p>
+            </div>
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_records }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         FILTER BAR
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="admin-filter-bar">
+        <div class="filter-section">
+            <!-- Status Tabs -->
+            <div class="filter-tabs">
+                <a href="{{ url_for('admin_verification.verification_dashboard', status='pending', search=search_query) }}"
+                   class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">
+                    <span class="tab-icon pending-icon"></span> Pending
+                    <span class="tab-count">
+                        {% set pending_count = total_records if status_filter == 'pending' else '?' %}
+                        ({{ pending_count }})
+                    </span>
+                </a>
+                <a href="{{ url_for('admin_verification.verification_dashboard', status='authorized', search=search_query) }}"
+                   class="filter-tab {% if status_filter == 'authorized' %}active{% endif %}">
+                    <span class="tab-icon authorized-icon"></span> Authorized
+                </a>
+                <a href="{{ url_for('admin_verification.verification_dashboard', status='rejected', search=search_query) }}"
+                   class="filter-tab {% if status_filter == 'rejected' %}active{% endif %}">
+                    <span class="tab-icon rejected-icon"></span> Rejected
+                </a>
+                <a href="{{ url_for('admin_verification.verification_dashboard', status='all', search=search_query) }}"
+                   class="filter-tab {% if status_filter == 'all' %}active{% endif %}">
+                    <span class="tab-icon all-icon"></span> All
+                </a>
+            </div>
+
+            <!-- Search Bar -->
+            <form method="GET" class="filter-search">
+                <input type="hidden" name="status" value="{{ status_filter }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" name="search" placeholder="Search by email, name, or role..." value="{{ search_query }}" class="search-input">
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         USERS TABLE
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="admin-table-container">
+        
+        {% if users %}
+        <table class="admin-users-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Registered</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr class="user-row" data-email="{{ user.email }}">
+                    <td class="col-username">
+                        <div class="user-avatar">{{ user.username[0].upper() }}</div>
+                        <span>{{ user.username }}</span>
+                    </td>
+                    <td class="col-email">{{ user.email }}</td>
+                    <td class="col-role">
+                        <span class="role-badge {% if user.role == 'entrepreneur' %}entrepreneur{% else %}investor{% endif %}">
+                            {{ user.role|capitalize }}
+                        </span>
+                    </td>
+                    <td class="col-date">{{ user.created_at }}</td>
+                    <td class="col-status">
+                        <span class="status-badge status-{{ user.status_class }}">
+                            {{ user.status_badge }}
+                        </span>
+                    </td>
+                    <td class="col-actions">
+                        <button class="action-btn view-btn" onclick="viewUserDetails('{{ user.email }}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            View
+                        </button>
+                        {% if user.authorized == 'not_authorized' %}
+                        <button class="action-btn approve-btn" onclick="approveUser('{{ user.email }}', '{{ user.username }}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Approve
+                        </button>
+                        <button class="action-btn reject-btn" onclick="rejectUser('{{ user.email }}', '{{ user.username }}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                            Reject
+                        </button>
+                        {% else %}
+                        <span class="action-text">
+                            {% if user.authorized == 'authorized' %}
+                            [APPROVED]
+                            {% else %}
+                            [REJECTED]
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             PAGINATION
+             ═══════════════════════════════════════════════════════════ -->
+        {% if total_pages > 1 %}
+        <div class="admin-pagination">
+            <div class="pagination-info">
+                Showing page <strong>{{ current_page }}</strong> of <strong>{{ total_pages }}</strong>
+            </div>
+            <div class="pagination-controls">
+                {% if current_page > 1 %}
+                <a href="{{ url_for('admin_verification.verification_dashboard', status=status_filter, search=search_query, page=1) }}" class="pagination-btn">First</a>
+                <a href="{{ url_for('admin_verification.verification_dashboard', status=status_filter, search=search_query, page=current_page-1) }}" class="pagination-btn">← Previous</a>
+                {% endif %}
+
+                {% for page_num in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+                    {% if page_num == current_page %}
+                    <span class="pagination-btn active">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('admin_verification.verification_dashboard', status=status_filter, search=search_query, page=page_num) }}" class="pagination-btn">{{ page_num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if current_page < total_pages %}
+                <a href="{{ url_for('admin_verification.verification_dashboard', status=status_filter, search=search_query, page=current_page+1) }}" class="pagination-btn">Next →</a>
+                <a href="{{ url_for('admin_verification.verification_dashboard', status=status_filter, search=search_query, page=total_pages) }}" class="pagination-btn">Last</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="admin-empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1" class="empty-icon">
+                <circle cx="32" cy="32" r="28"/><path d="M32 16v16l12 8"/>
+            </svg>
+            <h3>No users found</h3>
+            <p>There are no users matching your filter. Try adjusting your search criteria.</p>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+<!-- ================================================================
+     MODALS
+     ================================================================ -->
+
+<!-- View User Details Modal -->
+<div id="userDetailsModal" class="admin-modal">
+    <div class="admin-modal-content">
+        <button class="modal-close" onclick="closeModal('userDetailsModal')">&times;</button>
+        <h2>User Profile Details</h2>
+        <div id="userDetailsContent" class="modal-details-grid">
+            <p class="loading">Loading user details...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Confirmation Modal -->
+<div id="approveConfirmModal" class="admin-modal">
+    <div class="admin-modal-content modal-sm">
+        <button class="modal-close" onclick="closeModal('approveConfirmModal')">&times;</button>
+        <h2>Confirm Approval</h2>
+        <p>Are you sure you want to approve <strong id="approveUsername"></strong>?</p>
+        <p class="modal-text-info">This user will be able to log in and access the platform.</p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeModal('approveConfirmModal')">Cancel</button>
+            <button class="modal-btn approve" onclick="confirmApprove()">Yes, Approve</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Confirmation Modal -->
+<div id="rejectConfirmModal" class="admin-modal">
+    <div class="admin-modal-content modal-sm">
+        <button class="modal-close" onclick="closeModal('rejectConfirmModal')">&times;</button>
+        <h2>Confirm Rejection</h2>
+        <p>Are you sure you want to reject <strong id="rejectUsername"></strong>?</p>
+        <div class="form-group">
+            <label for="rejectReason">Reason (optional):</label>
+            <textarea id="rejectReason" placeholder="Enter reason for rejection..." class="form-textarea"></textarea>
+        </div>
+        <p class="modal-text-info">This user will not be able to log in until approved by another admin.</p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeModal('rejectConfirmModal')">Cancel</button>
+            <button class="modal-btn reject" onclick="confirmReject()">Yes, Reject</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<!-- ================================================================
+     SCRIPTS
+     ================================================================ -->
+<script>
+    let pendingAction = { type: null, email: null };
+
+    // View user details
+    function viewUserDetails(email) {
+        const modal = document.getElementById('userDetailsModal');
+        const content = document.getElementById('userDetailsContent');
+        
+        content.innerHTML = '<p class="loading">Loading...</p>';
+        modal.classList.add('show');
+
+        fetch(`{{ url_for('admin_verification.get_user_details', email='') }}${email}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    let html = `
+                        <div class="detail-group">
+                            <label>Username</label>
+                            <span>${user.username}</span>
+                        </div>
+                        <div class="detail-group">
+                            <label>Email</label>
+                            <span>${user.email}</span>
+                        </div>
+                        <div class="detail-group">
+                            <label>Role</label>
+                            <span class="role-badge ${user.role}">${user.role}</span>
+                        </div>
+                        <div class="detail-group">
+                            <label>Age</label>
+                            <span>${user.age || 'N/A'}</span>
+                        </div>
+                        <div class="detail-group">
+                            <label>Gender</label>
+                            <span>${user.gender || 'N/A'}</span>
+                        </div>
+                        <div class="detail-group">
+                            <label>Registration Date</label>
+                            <span>${user.created_at}</span>
+                        </div>
+                        <div class="detail-group">
+                            <label>Status</label>
+                            <span class="status-badge status-${user.authorized === 'authorized' ? 'authorized' : 'pending'}">${user.authorized}</span>
+                        </div>
+                    `;
+
+                    if (user.role === 'entrepreneur') {
+                        html += `
+                            <div class="detail-group">
+                                <label>Startup Name</label>
+                                <span>${user.startup_name}</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Bio</label>
+                                <span>${user.bio}</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Industry</label>
+                                <span>${user.industry}</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Location</label>
+                                <span>${user.location}</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Website</label>
+                                <span>${user.website || 'Not provided'}</span>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="detail-group">
+                                <label>Company Name</label>
+                                <span>${user.company_name}</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Bio</label>
+                                <span>${user.bio}</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Investment Focus</label>
+                                <span>${user.investment_focus}</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Location</label>
+                                <span>${user.location}</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Website</label>
+                                <span>${user.website || 'Not provided'}</span>
+                            </div>
+                        `;
+                    }
+
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = `<p class="error">Error: ${data.message}</p>`;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                content.innerHTML = '<p class="error">Failed to load user details</p>';
+            });
+    }
+
+    // Approve user (show confirmation)
+    function approveUser(email, username) {
+        pendingAction = { type: 'approve', email: email };
+        document.getElementById('approveUsername').textContent = username;
+        document.getElementById('approveConfirmModal').classList.add('show');
+    }
+
+    // Confirm approve
+    function confirmApprove() {
+        if (!pendingAction.email) return;
+
+        fetch('{{ url_for("admin_verification.approve_user") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingAction.email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            closeModal('approveConfirmModal');
+            showToast(data.message, data.success ? 'success' : 'error');
+            if (data.success) {
+                setTimeout(() => location.reload(), 1500);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('An error occurred', 'error');
+        });
+    }
+
+    // Reject user (show confirmation)
+    function rejectUser(email, username) {
+        pendingAction = { type: 'reject', email: email };
+        document.getElementById('rejectUsername').textContent = username;
+        document.getElementById('rejectConfirmModal').classList.add('show');
+    }
+
+    // Confirm reject
+    function confirmReject() {
+        if (!pendingAction.email) return;
+
+        const reason = document.getElementById('rejectReason').value || 'No reason provided';
+
+        fetch('{{ url_for("admin_verification.reject_user") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingAction.email, reason: reason })
+        })
+        .then(res => res.json())
+        .then(data => {
+            closeModal('rejectConfirmModal');
+            showToast(data.message, data.success ? 'success' : 'error');
+            if (data.success) {
+                setTimeout(() => location.reload(), 1500);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('An error occurred', 'error');
+        });
+    }
+
+    // Modal utilities
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('show');
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    // Close modal on background click
+    document.querySelectorAll('.admin-modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

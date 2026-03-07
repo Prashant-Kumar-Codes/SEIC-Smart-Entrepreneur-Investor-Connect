@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Feed — EISC Investor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/entrepreneur_feed.css') }}">
+</head>
+<body>
+
+<!-- ================================================================
+     SIDEBAR
+     ================================================================ -->
+{% set active_nav = 'feed' %}
+{% include 'auth/investor/sidebar.html' %}
+
+
+<!-- ================================================================
+     MAIN WRAPPER
+     ================================================================ -->
+<div class="main-wrap">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">Pitch <span>Feed</span></div>
+            <div class="topbar-subtitle">Discover new startup pitches from entrepreneurs seeking investment.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!', 'default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_notifs and unread_notifs > 0 %}
+                <span class="topbar-notif-dot"></span>
+                {% endif %}
+            </button>
+            <button class="topbar-icon-btn" onclick="showToast('Filter coming soon!', 'default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar" title="{{ profile.full_name or profile.username if profile else '' }}">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- FEED LAYOUT -->
+    <div class="feed-page-content">
+        
+        <!-- ══ MIDDLE: Feed ═══════════════════════════════════ -->
+        <div style="flex:1;max-width:600px">
+            <div class="feed-title">Pitch Feed</div>
+
+            <!-- Create Post -->
+            <div class="card create-post-card anim anim-2">
+                <div class="create-post-top">
+                    <div class="create-avatar">
+                        {{ profile.username[0].upper() if profile and profile.username else 'U' }}
+                    </div>
+                    <input type="text" class="create-input" id="createPostInput"
+                           placeholder="Share your pitch, idea, or startup update…" readonly>
+                </div>
+                <div class="create-post-actions">
+                    <button class="create-action-btn" data-open-modal="createPostModal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                        Write a Post
+                    </button>
+                    <button class="create-post-btn" onclick="openModal('createPostModal')">Post</button>
+                </div>
+            </div>
+
+            <!-- Posts -->
+            <div id="pitchFeed">
+                {% if posts %}
+                    {% for post in posts %}
+                    <div class="card pitch-card anim anim-{{ [3,4,5][loop.index0 % 3] }}" data-post-id="{{ post.post_id }}">
+                        <div class="pitch-header">
+                            <div class="pitch-avatar">
+                                {% if post.profile_image_url %}
+                                    <img src="{{ post.profile_image_url }}" alt="">
+                                {% else %}
+                                    {{ post.username[0].upper() if post.username else 'U' }}
+                                {% endif %}
+                            </div>
+                            <div class="pitch-author">
+                                <div class="pitch-author-name">{{ post.username }}</div>
+                                <div class="pitch-author-meta">
+                                    {% if post.startup_name %}{{ post.startup_name }}<span class="dot"> · </span>{% endif %}
+                                    <span>{{ post.time_ago if post.time_ago else 'just now' }}</span>
+                                </div>
+                            </div>
+                            <button class="pitch-more-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="pitch-tags">
+                            {% if post.industry_tag %}
+                                <span class="pitch-tag tag-industry">{{ post.industry_tag }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="pitch-title">{{ post.title }}</div>
+                        <div class="pitch-desc clamped">{{ post.description }}</div>
+
+                        {% if post.pitch_deck_url %}
+                        <div class="pitch-deck-preview" onclick="window.open('{{ post.pitch_deck_url }}', '_blank')">
+                            <div class="deck-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                                    <polyline points="13 2 13 9 20 9"/>
+                                </svg>
+                            </div>
+                            <div class="deck-info">
+                                <div class="deck-info-title">Pitch Deck</div>
+                                <div class="deck-info-sub">Click to view presentation</div>
+                            </div>
+                            <div class="deck-arrow">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if post.video_url %}
+                        <div class="pitch-video-preview" onclick="window.open('{{ post.video_url }}', '_blank')">
+                            <div class="video-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                </svg>
+                            </div>
+                            <div class="video-info">
+                                <div class="video-info-title">Watch Video</div>
+                                <div class="video-info-sub">Click to view pitch video</div>
+                            </div>
+                            <div class="video-arrow">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="pitch-stats-row">
+                            <span class="pitch-stat"><strong>{{ post.likes_count }}</strong> interested</span>
+                            <span class="pitch-stat"><strong>{{ post.saves_count }}</strong> saves</span>
+                            <span class="pitch-stat"><strong>{{ post.comments_count }}</strong> comments</span>
+                            <span class="pitch-stat"><strong>{{ post.views_count }}</strong> views</span>
+                        </div>
+                        <div class="pitch-actions">
+                            <button class="pitch-action-btn" data-action="interested">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                                Interested
+                            </button>
+                            <button class="pitch-action-btn" data-action="view">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                View Profile
+                            </button>
+                            <button class="pitch-action-btn" data-action="save">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                Save
+                            </button>
+                            <button class="pitch-action-btn" data-action="comment">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                Comment
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                {% else %}
+                <div class="card anim anim-3">
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        <p style="font-weight:700;color:var(--gray-900);margin-bottom:6px;">No pitches yet</p>
+                        <p>Check back soon for new startup pitches seeking investment.</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+
+        <!-- ══ RIGHT: Messages ════════════════════════════════ -->
+        <div class="anim anim-2" style="flex-shrink:0;width:280px;display:none;">
+            <div class="card messages-card">
+                <div class="messages-header">
+                    <div class="messages-title">
+                        Messages
+                        <button class="messages-new-btn" onclick="showToast('New message coming soon!', 'default')">+ New</button>
+                    </div>
+                    <div class="msg-search">
+                        <svg class="msg-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="msgSearch" placeholder="Search messages…">
+                    </div>
+                </div>
+                <div class="messages-list">
+                    {% if threads %}
+                        {% for t in threads %}
+                        <div class="msg-item {% if not t.is_read and t.sender_email != session.get('user_email') %}unread{% endif %}"
+                             data-partner-email="{{ t.partner_email }}">
+                            <div class="msg-avatar" style="background: linear-gradient(135deg,
+                                hsl({{ loop.index * 53 % 360 }},60%,40%),
+                                hsl({{ (loop.index * 53 + 40) % 360 }},60%,30%));">
+                                {% if t.partner_image or t.partner_image_investor %}
+                                    <img src="{{ t.partner_image or t.partner_image_investor }}" alt="">
+                                {% else %}
+                                    {{ t.partner_name[0].upper() if t.partner_name else 'U' }}
+                                {% endif %}
+                                {% if loop.index <= 2 %}<span class="msg-online"></span>{% endif %}
+                            </div>
+                            <div class="msg-content">
+                                <div class="msg-name-row">
+                                    <span class="msg-name">{{ t.partner_name }}</span>
+                                    <span class="msg-time">
+                                        {% if t.sent_at %}{{ t.sent_at.strftime('%H:%M') }}{% endif %}
+                                    </span>
+                                </div>
+                                <div class="msg-preview">
+                                    {% if t.sender_email == session.get('user_email') %}You: {% endif %}
+                                    {{ t.last_message[:40] }}{% if t.last_message|length > 40 %}…{% endif %}
+                                </div>
+                            </div>
+                            {% if not t.is_read and t.sender_email != session.get('user_email') %}
+                            <span class="msg-unread-dot"></span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <p style="font-weight:700;color:var(--gray-900);margin-bottom:4px;">No messages yet</p>
+                        <p>Connect with entrepreneurs to start talking.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /feed-page-content -->
+</div><!-- /main-wrap -->
+
+<!-- ================================================================
+     MODAL — CREATE POST
+     ================================================================ -->
+<div class="modal-overlay" id="createPostModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-header-title">Create a Post</div>
+            <button class="modal-close" data-close-modal="createPostModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <form id="createPostForm">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Title <span style="color:#ef4444">*</span></label>
+                    <input class="form-input" id="cp_title" type="text"
+                           placeholder="e.g. Seeking B2B SaaS co-founders" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description <span style="color:#ef4444">*</span></label>
+                    <textarea class="form-textarea" id="cp_description" style="min-height:100px"
+                              placeholder="Describe your current thoughts or requests…" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Industry Tag</label>
+                    <input class="form-input" id="cp_industry" type="text" placeholder="e.g. FinTech, SaaS">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-close-modal="createPostModal">Cancel</button>
+                <button type="submit" class="btn-submit">Post</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/investor/investor_feed.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+</body>
+</html>

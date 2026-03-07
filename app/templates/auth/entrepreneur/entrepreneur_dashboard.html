@@ -1,0 +1,732 @@
+{% extends 'base.html' %}
+{% block title %}Enterpreneur Dashboard - SEIC{% endblock %}
+
+{% block style %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/entrepreneur_dashboard.css') }}">
+{% endblock %}
+
+
+{% block content %}
+
+    {{super()}}
+
+    <!-- SIDEBAR -->
+    {% set active_nav = 'home' %}
+    {% include 'auth/entrepreneur/sidebar.html' %}
+
+
+    <!--MAIN WRAPPER-->
+    <div class="main-wrap">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+            <div class="topbar-titles">
+                <div class="topbar-page-title">Startup <span>Funding</span> Dashboard</div>
+                <div class="topbar-subtitle">Get matched with the right investors.</div>
+            </div>
+            <div class="topbar-actions">
+                <button class="topbar-icon-btn sidebar-toggle-btn" id="sidebarToggleBtn" type="button" aria-label="Toggle Sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!', 'default')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    {% if unread_notifs and unread_notifs > 0 %}
+                    <span class="topbar-notif-dot"></span>
+                    {% endif %}
+                </button>
+                <button class="topbar-icon-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41"/>
+                    </svg>
+                </button>
+                <div class="topbar-divider"></div>
+                <div class="topbar-avatar" onclick="showToast('Profile settings coming soon!', 'default')"
+                    title="{{ profile.username if profile else '' }}">
+                    {% if profile and profile.profile_image_url %}
+                        <img src="{{ profile.profile_image_url }}" alt="">
+                    {% else %}
+                        {{ profile.username[0].upper() if profile and profile.username else 'U' }}
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <!-- PAGE CONTENT -->
+        <div class="page-content">
+
+            <!-- ── Stat Cards Row ─────────────────────────── -->
+            <div class="stats-row">
+
+                <!-- Profile Score -->
+                <div class="card stat-card anim anim-1">
+                    <div class="stat-card-left">
+                        <div class="stat-card-label">Profile Score</div>
+                        <div class="stat-card-value">
+                            {% if profile and profile.profile_score and profile.profile_score > 0 %}
+                                {{ profile.profile_score }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                        <div class="stat-card-sub {% if profile and profile.profile_score and profile.profile_score > 60 %}green{% elif profile and profile.profile_score and profile.profile_score > 40 %}amber{% else %}blue{% endif %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            {% if profile and profile.profile_score and profile.profile_score > 60 %}
+                                Investment Ready
+                            {% elif profile and profile.profile_score and profile.profile_score > 40 %}
+                                Good Progress
+                            {% else %}
+                                Building Profile
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="stat-card-right">
+                        <div class="score-shield">
+                            <div class="score-shield-bg">
+                                <div class="score-shield-num">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investor Matches -->
+                <div class="card stat-card anim anim-2">
+                    <div class="stat-card-left">
+                        <div class="stat-card-label">Investor Matches</div>
+                        <div class="stat-card-value">{{ investor_match_count if investor_match_count is defined else '—' }}</div>
+                        <div class="stat-card-sub blue">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Interested Investors
+                        </div>
+                    </div>
+                    <div class="stat-card-right">
+                        <div class="stat-tag blue">Verified Interest</div>
+                    </div>
+                </div>
+
+                <!-- Meetings Scheduled -->
+                <div class="card stat-card anim anim-3">
+                    <div class="stat-card-left">
+                        <div class="stat-card-label">Meetings Scheduled</div>
+                        <div class="stat-card-value">{{ meetings|length if meetings else '—' }}</div>
+                        <div class="stat-card-sub amber">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Upcoming Sessions
+                        </div>
+                    </div>
+                    <div class="stat-card-right">
+                        <div class="stat-tag teal">Calendar</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Stacked Sections ─────────────────────────── -->
+            <div class="dashboard-sections">
+
+                    <!-- AI Summary + Top Investors -->
+                    <div class="card anim anim-3" style="margin-bottom:18px;">
+                        <div class="card-header">
+                            <div class="card-title">AI Startup Summary</div>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <button id="btn-all" style="background:#3b82f6; color:white; border-radius:5px; border: none; padding: 5px 12px; cursor:pointer; font-weight:500;" class="toggle-btn active" onclick="showAllList()">All</button>
+                                <button id="btn-investors" style="background:#6b7280; color:white; border-radius:5px; border: none; padding: 5px 12px; cursor:pointer; font-weight:500;" class="toggle-btn" onclick="showInvestorList()">Investors</button>
+                                <button id="btn-entrepreneurs" style="background:#6b7280; color:white; border-radius:5px; border: none; padding: 5px 12px; cursor:pointer; font-weight:500;" class="toggle-btn" onclick="showEntrepreneurList()">Entrepreneurs</button>
+                            </div>
+                        </div>
+
+                        <div class="investors-list" style="padding: 10px 0;">
+                            <div id="all-list-container"></div>
+                            <div id="investor-list-container" style="display:none;"></div>
+                            <div id="entrepreneur-list-container" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Deal Tracker -->
+                    <div class="card deal-tracker-card anim anim-4">
+                        <div class="card-header">
+                            <div class="card-title">Deal Tracker</div>
+                            <a class="card-action-link" href="#" onclick="showToast('Full deal tracker coming soon!', 'default'); return false;">
+                                View All →
+                            </a>
+                        </div>
+                        <div class="deal-tracker-stages">
+
+                            {% set deal_stages = [
+                                {'key': 'introduced', 'label': 'Introduced', 'class': 'stage-introduced',
+                                'icon': '<circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/>',
+                                'count': deal_counts.introduced if deal_counts else 0},
+                                {'key': 'discussion', 'label': 'In Discussion', 'class': 'stage-discussion',
+                                'icon': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+                                'count': deal_counts.discussion if deal_counts else 0},
+                                {'key': 'diligence',  'label': 'Due Diligence','class': 'stage-diligence',
+                                'icon': '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+                                'count': deal_counts.diligence if deal_counts else 0},
+                                {'key': 'term_sheet', 'label': 'Term Sheet',   'class': 'stage-termsheet',
+                                'icon': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+                                'count': deal_counts.term_sheet if deal_counts else 0},
+                                {'key': 'closed',     'label': 'Closed',       'class': 'stage-closed',
+                                'icon': '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+                                'count': deal_counts.closed if deal_counts else 0},
+                            ] %}
+
+                            {% for stage in deal_stages %}
+                            <div class="deal-stage">
+                                <div class="deal-stage-pill {{ stage.class }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        {{ stage.icon | safe }}
+                                    </svg>
+                                    {{ stage.label }}
+                                </div>
+                                <div class="deal-stage-count">{{ stage.count }}</div>
+                            </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Meetings -->
+                    <div class="card anim anim-4">
+                        <div class="card-header">
+                            <div class="card-title">Upcoming Meetings</div>
+                            <a class="card-action-link" href="#"
+                            onclick="showToast('Calendar coming soon!', 'default'); return false;">View all</a>
+                        </div>
+
+                        {% if meetings %}
+                            {% for mtg in meetings[:3] %}
+                            <div class="meeting-item">
+                                <div class="meeting-item-top">
+                                    <div class="meeting-datetime">
+                                        {{ mtg.scheduled_at.strftime('%a, %d %b | %I:%M %p') if mtg.scheduled_at else 'TBD' }}
+                                    </div>
+                                    <div class="meeting-cal-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="meeting-desc">
+                                    {{ mtg.meeting_type if mtg.meeting_type else 'Meeting' }} with
+                                    <strong>{{ mtg.investor_name if mtg.investor_name else '—' }}</strong>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                        {% else %}
+                            <!-- No data found -->
+                            <div class="empty-state-compact">
+                                <div class="empty-state-compact-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                </div>
+                                <div class="empty-state-compact-text">
+                                    No meetings scheduled yet
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <button class="manage-schedule-btn" onclick="openModal('scheduleMeetingModal')">
+                            + Schedule Meeting
+                        </button>
+                    </div>
+
+                    <!-- Pitch Materials -->
+                    <div class="card anim anim-5">
+                        <div class="card-header">
+                            <div class="card-title">Pitch Materials Uploaded</div>
+                            <a class="card-action-link" href="#"
+                            onclick="showToast('Manage materials coming soon!', 'default'); return false;">+ Add</a>
+                        </div>
+                        <div class="pitch-materials-grid">
+                            <div class="pitch-material-item" onclick="showToast('Pitch Deck viewer coming soon!', 'default')">
+                                <div class="pitch-material-icon icon-deck">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                        <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                                    </svg>
+                                </div>
+                                <div class="pitch-material-label">Pitch Deck</div>
+                            </div>
+                            <div class="pitch-material-item" onclick="showToast('Financials viewer coming soon!', 'default')">
+                                <div class="pitch-material-icon icon-finance">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+                                        <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+                                    </svg>
+                                </div>
+                                <div class="pitch-material-label">Financials</div>
+                            </div>
+                            <div class="pitch-material-item" onclick="showToast('Demo video player coming soon!', 'default')">
+                                <div class="pitch-material-icon icon-video">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="23 7 16 12 23 17 23 7"/>
+                                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                    </svg>
+                                </div>
+                                <div class="pitch-material-label">Demo Video</div>
+                            </div>
+                        </div>
+                    </div>
+
+            </div><!-- /dashboard-sections -->
+        </div><!-- /page-content -->
+    </div><!-- /main-wrap -->
+
+
+    <!-- ================================================================
+        MODAL — EDIT PROFILE
+        ================================================================ -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-header-title">Edit Profile</div>
+                <button class="modal-close" data-close-modal="editProfileModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="editProfileForm">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Startup Name</label>
+                            <input class="form-input" id="ep_startup_name" type="text"
+                                placeholder="e.g. TechFlow AI"
+                                value="{{ profile.startup_name if profile and profile.startup_name else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Industry</label>
+                            <input class="form-input" id="ep_industry" type="text"
+                                placeholder="e.g. FinTech, HealthTech"
+                                value="{{ profile.industry if profile and profile.industry else '' }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bio</label>
+                        <textarea class="form-textarea" id="ep_bio" placeholder="Tell investors about your journey…">{{ profile.bio if profile and profile.bio else '' }}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input class="form-input" id="ep_location" type="text"
+                                placeholder="e.g. San Francisco, CA"
+                                value="{{ profile.location if profile and profile.location else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Website</label>
+                            <input class="form-input" id="ep_website" type="url"
+                                placeholder="https://yourstartup.com"
+                                value="{{ profile.website_url if profile and profile.website_url else '' }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">LinkedIn</label>
+                            <input class="form-input" id="ep_linkedin" type="url"
+                                placeholder="https://linkedin.com/in/…"
+                                value="{{ profile.linkedin_url if profile and profile.linkedin_url else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Twitter / X</label>
+                            <input class="form-input" id="ep_twitter" type="url"
+                                placeholder="https://x.com/…"
+                                value="{{ profile.twitter_url if profile and profile.twitter_url else '' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-close-modal="editProfileModal">Cancel</button>
+                    <button type="submit" class="btn-submit">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ================================================================
+        MODAL — PREMIUM UPGRADE
+        ================================================================ -->
+    <div class="modal-overlay" id="premiumModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-header-title">⭐ Upgrade to Premium</div>
+                <button class="modal-close" data-close-modal="premiumModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="premium-header-banner">
+                    <h2>Unlock Your Full Potential</h2>
+                    <p>Get more investor visibility, AI-powered analysis, and priority support.</p>
+                </div>
+                <div class="premium-plans">
+                    <div class="plan-card">
+                        <div class="plan-name">Pro</div>
+                        <div class="plan-price">₹2,499 <span>/ month</span></div>
+                        <div class="plan-features">
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                50 investor matches/mo
+                            </div>
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                AI pitch analysis
+                            </div>
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                Priority listing
+                            </div>
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                Analytics dashboard
+                            </div>
+                        </div>
+                    </div>
+                    <div class="plan-card featured">
+                        <div class="plan-featured-badge">MOST POPULAR</div>
+                        <div class="plan-name">Elite</div>
+                        <div class="plan-price">₹5,999 <span>/ month</span></div>
+                        <div class="plan-features">
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                Unlimited matches
+                            </div>
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                AI pitch + deck review
+                            </div>
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                Featured profile badge
+                            </div>
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                Dedicated advisor
+                            </div>
+                            <div class="plan-feature">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                Event invitations
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="premium-cta-btn" onclick="showToast('Payment integration coming soon!', 'default')">
+                    ⭐ Get Started with Elite
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Schedule Meeting Modal -->
+    <div class="modal-overlay" id="scheduleMeetingModal">
+        <div class="modal" style="max-width:500px">
+            <div class="modal-header">
+                <div class="modal-header-title">📅 Schedule Meeting</div>
+                <button class="modal-close" data-close-modal="scheduleMeetingModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleMeetingForm">
+                    <div class="form-group">
+                        <label class="form-label" for="meetInvestor">Select Investor</label>
+                        <select id="meetInvestor" class="form-input" required>
+                            <option value="">Choose an investor...</option>
+                            {% for inv in top_investors %}
+                            <option value="{{ inv.email }}">{{ inv.username }} ({{ inv.firm_name or 'Investor' }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="meetType">Meeting Type</label>
+                        <select id="meetType" class="form-input" required>
+                            <option value="">Choose type...</option>
+                            <option value="Video Call">Video Call</option>
+                            <option value="Phone Call">Phone Call</option>
+                            <option value="In-Person">In-Person Meeting</option>
+                            <option value="Coffee Chat">Coffee Chat</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="meetDate">Date & Time</label>
+                        <input type="datetime-local" id="meetDate" class="form-input" required />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeModal('scheduleMeetingModal')">Cancel</button>
+                        <button type="submit" class="btn-submit">Schedule Meeting</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+{% endblock %}
+
+{% block script %}
+    {{super()}}
+
+    <script src="{{ url_for('static', filename='js/entrepreneur_dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+
+    <script>
+    // Global data storage
+    let allInvestors = [];
+    let allEntrepreneurs = [];
+
+    // Load all data on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAllData();
+    });
+
+    async function loadAllData() {
+        try {
+            // Load investors
+            const investorResponse = await fetch('/api/dashboard/all_investors');
+            const investorData = await investorResponse.json();
+            if (investorData.success) {
+                allInvestors = investorData.investors || [];
+            }
+
+            // Load entrepreneurs
+            const entrepreneurResponse = await fetch('/api/dashboard/all_entrepreneurs');
+            const entrepreneurData = await entrepreneurResponse.json();
+            if (entrepreneurData.success) {
+                allEntrepreneurs = entrepreneurData.entrepreneurs || [];
+            }
+
+            // Show all by default
+            showAllList();
+        } catch (error) {
+            console.error('Error loading data:', error);
+            showToast('Failed to load data', 'error');
+        }
+    }
+
+    function showAllList() {
+        // Update button states
+        setActiveButton('btn-all');
+        
+        // Hide other containers
+        document.getElementById('investor-list-container').style.display = 'none';
+        document.getElementById('entrepreneur-list-container').style.display = 'none';
+        
+        // Show all container
+        const container = document.getElementById('all-list-container');
+        container.style.display = 'block';
+        
+        // Render combined list
+        let html = '';
+        
+        // Add investors
+        if (allInvestors.length > 0) {
+            html += '<div style="margin-bottom: 15px;"><h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 10px;">Investors</h3>';
+            allInvestors.forEach(investor => {
+                html += renderInvestorCard(investor);
+            });
+            html += '</div>';
+        }
+        
+        // Add entrepreneurs
+        if (allEntrepreneurs.length > 0) {
+            html += '<div><h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 10px;">Entrepreneurs</h3>';
+            allEntrepreneurs.forEach(entrepreneur => {
+                html += renderEntrepreneurCard(entrepreneur);
+            });
+            html += '</div>';
+        }
+        
+        if (allInvestors.length === 0 && allEntrepreneurs.length === 0) {
+            html = '<div style="text-align: center; padding: 20px; color: #6b7280;">No profiles found</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+
+    function showInvestorList() {
+        // Update button states
+        setActiveButton('btn-investors');
+        
+        // Hide other containers
+        document.getElementById('all-list-container').style.display = 'none';
+        document.getElementById('entrepreneur-list-container').style.display = 'none';
+        
+        // Show investor container
+        const container = document.getElementById('investor-list-container');
+        container.style.display = 'block';
+        
+        // Render investors
+        let html = '';
+        if (allInvestors.length > 0) {
+            allInvestors.forEach(investor => {
+                html += renderInvestorCard(investor);
+            });
+        } else {
+            html = '<div style="text-align: center; padding: 20px; color: #6b7280;">No investors found</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+
+    function showEntrepreneurList() {
+        // Update button states
+        setActiveButton('btn-entrepreneurs');
+        
+        // Hide other containers
+        document.getElementById('all-list-container').style.display = 'none';
+        document.getElementById('investor-list-container').style.display = 'none';
+        
+        // Show entrepreneur container
+        const container = document.getElementById('entrepreneur-list-container');
+        container.style.display = 'block';
+        
+        // Render entrepreneurs
+        let html = '';
+        if (allEntrepreneurs.length > 0) {
+            allEntrepreneurs.forEach(entrepreneur => {
+                html += renderEntrepreneurCard(entrepreneur);
+            });
+        } else {
+            html = '<div style="text-align: center; padding: 20px; color: #6b7280;">No entrepreneurs found</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+
+    function setActiveButton(activeId) {
+        ['btn-all', 'btn-investors', 'btn-entrepreneurs'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (id === activeId) {
+                btn.style.background = '#3b82f6';
+                btn.classList.add('active');
+            } else {
+                btn.style.background = '#6b7280';
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function renderInvestorCard(investor) {
+        const matchScore = investor.match_score ? Math.round(investor.match_score * 100) : 0;
+        const profileScore = investor.profile_score || 0;
+        const verified = investor.is_verified ? '<span style="color: #10b981; font-size: 11px; font-weight:700;">✓ Verified</span>' : '';
+        const avatar = investor.profile_image_url 
+            ? `<img src="${investor.profile_image_url}" alt="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: var(--shadow-sm);">` 
+            : `<div style="width: 52px; height: 52px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 18px; border: 2px solid white; box-shadow: var(--shadow-sm);">${(investor.username || 'U')[0].toUpperCase()}</div>`;
+        
+        return `
+            <div class="investor-row" style="border-top: none; border-bottom: 1px solid rgba(226, 232, 240, 0.6); padding: 16px 24px;">
+                ${avatar}
+                <div class="investor-info">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="investor-name">${investor.username || 'Unknown'}</span>
+                        ${verified}
+                    </div>
+                    <div class="investor-role">${investor.firm_name || 'Investor'} • ${investor.investment_focus || 'Not specified'}</div>
+                    <div style="display:flex; gap:8px; margin-top:6px;">
+                        ${matchScore > 0 ? `<span class="investor-badge" style="background:var(--blue-bg); color:var(--blue-text); border:1px solid rgba(59,130,246,0.1);">${matchScore}% Match</span>` : ''}
+                        ${profileScore > 0 ? `<span class="investor-badge" style="background:var(--green-bg); color:var(--green-text); border:1px solid rgba(16,185,129,0.1);">${profileScore}/100 Profile</span>` : ''}
+                    </div>
+                </div>
+                <button onclick="viewProfile('investor', '${investor.email}')" style="background: var(--gradient-primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight:700; cursor: pointer; white-space: nowrap; box-shadow: var(--shadow-sm);">
+                    View Profile
+                </button>
+            </div>
+        `;
+    }
+
+    function renderEntrepreneurCard(entrepreneur) {
+        const profileScore = entrepreneur.profile_score || 0;
+        const verified = entrepreneur.is_verified ? '<span style="color: #10b981; font-size: 11px; font-weight:700;">✓ Verified</span>' : '';
+        const avatar = entrepreneur.profile_image_url 
+            ? `<img src="${entrepreneur.profile_image_url}" alt="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: var(--shadow-sm);">` 
+            : `<div style="width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 18px; border: 2px solid white; box-shadow: var(--shadow-sm);">${(entrepreneur.username || 'U')[0].toUpperCase()}</div>`;
+        
+        return `
+            <div class="investor-row" style="border-top: none; border-bottom: 1px solid rgba(226, 232, 240, 0.6); padding: 16px 24px;">
+                ${avatar}
+                <div class="investor-info">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="investor-name">${entrepreneur.username || 'Unknown'}</span>
+                        ${verified}
+                    </div>
+                    <div class="investor-role">${entrepreneur.startup_name || 'Startup'} • ${entrepreneur.industry || 'Not specified'}</div>
+                    <div style="display:flex; gap:8px; margin-top:6px;">
+                        ${profileScore > 0 ? `<span class="investor-badge" style="background:var(--green-bg); color:var(--green-text); border:1px solid rgba(16,185,129,0.1);">${profileScore}/100 Score</span>` : ''}
+                    </div>
+                </div>
+                <button onclick="viewProfile('entrepreneur', '${entrepreneur.email}')" style="background: var(--gradient-primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight:700; cursor: pointer; white-space: nowrap; box-shadow: var(--shadow-sm);">
+                    View Profile
+                </button>
+            </div>
+        `;
+    }
+
+    function viewProfile(type, email) {
+        if (type === 'investor') {
+            window.location.href = `/investor/profile/${encodeURIComponent(email)}`;
+        } else {
+            window.location.href = `/entrepreneur/profile/${encodeURIComponent(email)}`;
+        }
+    }
+
+    function renderDetailRow(label, value) {
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f9fafb; border-radius: 8px;">
+                <div style="font-size: 13px; font-weight: 600; color: #6b7280;">${label}</div>
+                <div style="font-size: 14px; color: #1f2937; font-weight: 500;">${value}</div>
+            </div>
+        `;
+    }
+
+    // Modal helper functions
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('open');
+    }
+
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('open');
+    }
+
+    // Toast helper function
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.className = `toast ${type || 'default'}`;
+        const icons = {
+            success: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`,
+            error:   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>`,
+            default: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/></svg>`
+        };
+        t.innerHTML = (icons[type] || icons.default) + `<span>${msg}</span>`;
+        document.getElementById('toastContainer').appendChild(t);
+        setTimeout(() => { t.classList.add('removing'); t.addEventListener('animationend', () => t.remove()); }, 3200);
+    }
+    </script>
+
+{% endblock %}

@@ -1,0 +1,835 @@
+/* ================================================================
+   EISC — Investor Portfolio Page CSS
+   Theme: Deep Espresso / Mahogany with Light Peachy Cards
+   ================================================================ */
+
+/* ── Fade-in animation helpers ────────────────────────────────── */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.anim { opacity: 0; animation: fadeUp 0.35s ease forwards; }
+.anim-1 { animation-delay: 0.05s; }
+.anim-2 { animation-delay: 0.10s; }
+.anim-3 { animation-delay: 0.16s; }
+.anim-4 { animation-delay: 0.22s; }
+
+/* ── Smart Flexbox Layout ───────────────────────────────────── */
+.portfolio-page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.portfolio-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+    max-width: 800px;
+}
+
+.portfolio-right {
+    width: 340px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PARAMS CARD  (Investment Parameters — numeric / short-text)
+══════════════════════════════════════════════════════════════ */
+.params-card {
+    background: var(--surface); /* Light Peach */
+    border-radius: var(--r-xl);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.params-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid rgba(74, 37, 27, 0.1);
+    background: transparent;
+}
+
+.params-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--navy);
+}
+.params-title svg { width: 16px; height: 16px; color: var(--primary-orange); flex-shrink: 0; }
+
+.params-subtitle {
+    font-size: 0.74rem;
+    color: var(--navy-500);
+    margin-top: 3px;
+}
+
+/* 2-column grid for param fields */
+.params-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+    padding: 18px 22px;
+}
+
+.param-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Span both columns */
+.param-span2 {
+    grid-column: span 2;
+}
+
+.param-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--navy);
+    cursor: default;
+    user-select: none;
+}
+.param-label svg { width: 12px; height: 12px; color: var(--navy-400); flex-shrink: 0; }
+
+.param-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--navy-400);
+    border-radius: var(--r-md);
+    font-size: 0.84rem;
+    color: var(--navy);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: rgba(74, 37, 27, 0.04); /* Soft inset wash */
+    outline: none;
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    box-sizing: border-box;
+    -moz-appearance: textfield;
+}
+.param-input::-webkit-inner-spin-button,
+.param-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.param-input:focus {
+    border-color: var(--primary-orange);
+    background: rgba(74, 37, 27, 0.08); /* No harsh whites */
+}
+.param-input::placeholder { color: var(--navy-400); }
+
+.param-hint {
+    font-size: 0.69rem;
+    color: var(--navy-500);
+    font-weight: 600;
+    min-height: 14px;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   PORTFOLIO EDITOR CARD  (8 AI-enhanceable text sections)
+══════════════════════════════════════════════════════════════ */
+.portfolio-editor-card {
+    background: var(--surface);
+    border-radius: var(--r-xl);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.portfolio-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid rgba(74, 37, 27, 0.1);
+    background: transparent;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.portfolio-editor-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--navy);
+}
+
+.portfolio-editor-subtitle {
+    font-size: 0.74rem;
+    color: var(--navy-500);
+    margin-top: 3px;
+}
+
+.portfolio-editor-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Save All button */
+.btn-save-portfolio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: var(--navy-600);
+    color: var(--white);
+    border: none;
+    border-radius: var(--r-md);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+}
+.btn-save-portfolio:hover    { background: var(--navy-700); transform: translateY(-1px); }
+.btn-save-portfolio:disabled { opacity: 0.5; pointer-events: none; }
+.btn-save-portfolio svg      { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* Enhance All button */
+.btn-ai-enhance {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: linear-gradient(135deg, var(--primary-orange), var(--accent-orange));
+    color: var(--white);
+    border: none;
+    border-radius: var(--r-md);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(255, 69, 27, 0.25);
+}
+.btn-ai-enhance:hover    { opacity: 0.92; transform: translateY(-1px); }
+.btn-ai-enhance:disabled { opacity: 0.5; pointer-events: none; }
+.btn-ai-enhance svg      { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ── Accordion sections ───────────────────────────────────────── */
+.portfolio-sections {
+    display: flex;
+    flex-direction: column;
+}
+
+.portfolio-section-item {
+    border-bottom: 1px solid rgba(74, 37, 27, 0.1);
+}
+.portfolio-section-item:last-child { border-bottom: none; }
+
+.portfolio-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 22px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+}
+.portfolio-section-header:hover { background: rgba(74, 37, 27, 0.04); }
+
+.portfolio-section-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--r-md);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.portfolio-section-icon svg { width: 16px; height: 16px; }
+
+/* Section colour palette — Warm mapping */
+.section-thesis     { background: rgba(255, 69, 27, 0.15); color: var(--accent-orange); }
+.section-criteria   { background: rgba(34, 197, 94, 0.15); color: #166534; }
+.section-highlights { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.section-sectors    { background: rgba(74, 37, 27, 0.1); color: var(--navy); }
+.section-dd         { background: rgba(13, 148, 136, 0.15); color: #0f766e; }
+.section-valueadd   { background: rgba(252, 211, 77, 0.25); color: #92400e; }
+.section-exit       { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+.section-coinvest   { background: rgba(255, 69, 27, 0.08); color: var(--primary-orange); }
+
+.portfolio-section-label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--navy);
+    min-width: 150px;
+}
+
+.portfolio-section-hint {
+    font-size: 0.74rem;
+    color: var(--navy-500);
+    flex: 1;
+    font-style: italic;
+}
+
+.portfolio-section-word-count {
+    font-size: 0.7rem;
+    color: var(--navy-500);
+    font-weight: 600;
+    white-space: nowrap;
+    margin-right: 4px;
+}
+
+.portfolio-section-chevron {
+    color: var(--navy-400);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+}
+.portfolio-section-chevron svg { width: 16px; height: 16px; display: block; }
+.portfolio-section-item.open .portfolio-section-chevron { transform: rotate(180deg); }
+
+/* Section body */
+.portfolio-section-body {
+    display: none;
+    padding: 0 22px 18px;
+    animation: slideDown 0.2s ease;
+    background: transparent !important;
+}
+.portfolio-section-item.open .portfolio-section-body { display: block; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Textarea */
+.portfolio-textarea {
+    width: 100%;
+    min-height: 130px;
+    padding: 14px;
+    border: 1px solid var(--navy-400);
+    border-radius: var(--r-md);
+    font-size: 0.875rem;
+    color: var(--navy);
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: rgba(74, 37, 27, 0.04);
+    transition: border-color 0.2s, background 0.2s;
+    box-sizing: border-box;
+}
+.portfolio-textarea:focus {
+    border-color: var(--primary-orange);
+    background: rgba(74, 37, 27, 0.08);
+}
+.portfolio-textarea::placeholder { color: var(--navy-400); }
+
+/* Section footer */
+.portfolio-section-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+/* Per-section AI enhance pill */
+.portfolio-ai-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    background: rgba(255, 69, 27, 0.1);
+    color: var(--accent-orange);
+    border: 1px solid rgba(255, 69, 27, 0.2);
+    border-radius: var(--r-full);
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.15s;
+}
+.portfolio-ai-btn:hover {
+    background: linear-gradient(135deg, var(--primary-orange), var(--accent-orange));
+    color: var(--white);
+    border-color: transparent;
+}
+.portfolio-ai-btn:disabled { opacity: 0.5; pointer-events: none; }
+.portfolio-ai-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+.portfolio-char-count {
+    font-size: 0.68rem;
+    color: var(--navy-500);
+}
+
+/* ── AI result box ────────────────────────────────────────────── */
+.ai-result-box {
+    display: none;
+    margin: 10px 0 4px;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    border: 1px solid rgba(255, 69, 27, 0.2);
+    animation: fadeUp 0.2s ease;
+}
+.ai-result-box.visible { display: block; }
+
+.ai-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    background: linear-gradient(135deg, var(--primary-orange), var(--accent-orange));
+    color: var(--white);
+}
+
+.ai-result-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+.ai-result-label svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+.ai-result-actions { display: flex; gap: 8px; }
+
+.ai-accept-btn {
+    padding: 4px 12px;
+    background: rgba(255,255,255,0.25);
+    color: var(--white);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: var(--r-full);
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background 0.15s;
+}
+.ai-accept-btn:hover { background: rgba(255,255,255,0.35); }
+
+.ai-dismiss-btn {
+    padding: 4px 10px;
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: var(--r-full);
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: color 0.15s;
+}
+.ai-dismiss-btn:hover { color: var(--white); }
+
+.ai-result-text {
+    padding: 14px;
+    font-size: 0.85rem;
+    line-height: 1.72;
+    color: var(--navy);
+    background: rgba(255, 69, 27, 0.05);
+    white-space: pre-wrap;
+}
+
+/* AI thinking animation */
+.ai-thinking {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(255, 69, 27, 0.05);
+    font-size: 0.8rem;
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+.ai-thinking-dots { display: flex; gap: 3px; }
+.ai-thinking-dots span {
+    width: 6px; height: 6px; background: var(--accent-orange);
+    border-radius: 50%; animation: bounce 0.8s ease-in-out infinite;
+}
+.ai-thinking-dots span:nth-child(2) { animation-delay: 0.16s; }
+.ai-thinking-dots span:nth-child(3) { animation-delay: 0.32s; }
+
+
+/* ══════════════════════════════════════════════════════════════
+   RIGHT COLUMN LISTS & CARDS
+══════════════════════════════════════════════════════════════ */
+
+/* ── Profile Strength Ring card ───────────────────────────────── */
+.strength-card {
+    background: var(--surface);
+    border-radius: var(--r-xl);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 18px 20px;
+}
+
+.strength-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 14px;
+}
+.strength-title svg { width: 16px; height: 16px; color: var(--primary-orange); flex-shrink: 0; }
+
+.strength-ring-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.strength-ring {
+    width: 80px; height: 80px;
+    flex-shrink: 0;
+    transform: rotate(-90deg);
+}
+
+.ring-bg   { fill: none; stroke: rgba(74, 37, 27, 0.1); stroke-width: 7; }
+.ring-fill {
+    fill: none;
+    stroke: var(--primary-orange);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-dasharray: 188.5;   /* 2π × 30 */
+    stroke-dashoffset: 188.5;
+    transition: stroke-dashoffset 0.8s ease, stroke 0.4s ease;
+}
+
+.strength-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--navy);
+    line-height: 1;
+}
+.strength-sub {
+    font-size: 0.72rem;
+    color: var(--navy-500);
+    margin-top: 2px;
+}
+
+.strength-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.strength-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.76rem;
+    color: var(--navy);
+}
+.check-done { color: #16a34a; }
+.check-todo { color: var(--navy-400); }
+
+/* ── Portfolio Stats card ─────────────────────────────────────── */
+.portfolio-stats-card {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-600) 100%);
+    border-radius: var(--r-xl);
+    padding: 18px 20px;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.portfolio-stats-card::before {
+    content: '';
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255, 69, 27, 0.25), transparent 70%);
+    pointer-events: none;
+}
+
+.ps-card-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: rgba(255, 250, 244, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+}
+
+.ps-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.ps-stat {
+    background: rgba(255, 250, 244, 0.06);
+    border-radius: var(--r-md);
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 250, 244, 0.1);
+}
+.ps-stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 3px;
+}
+.ps-stat-label {
+    font-size: 0.67rem;
+    color: rgba(255, 250, 244, 0.5);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── Deal Pipeline / Interests / Portfolio list cards ─────────── */
+.pipeline-card,
+.interests-card,
+.portfolio-list-card {
+    background: var(--surface);
+    border-radius: var(--r-xl);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.pipeline-card-header,
+.interests-card-header,
+.portfolio-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(74, 37, 27, 0.1);
+    background: transparent;
+}
+
+.pipeline-card-title,
+.interests-card-title,
+.portfolio-list-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--navy);
+}
+.pipeline-card-title svg,
+.interests-card-title svg,
+.portfolio-list-title svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--primary-orange); }
+
+.pipeline-view-all,
+.interests-view-all {
+    font-size: 0.72rem;
+    color: var(--primary-orange);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.pipeline-view-all:hover,
+.interests-view-all:hover { text-decoration: underline; color: var(--accent-orange); }
+
+.pipeline-body,
+.interests-body,
+.portfolio-list-body { padding: 8px 14px; }
+
+/* Deal items */
+.deal-item,
+.interest-item,
+.port-invest-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid rgba(74, 37, 27, 0.1);
+}
+.deal-item:last-child,
+.interest-item:last-child,
+.port-invest-item:last-child { border-bottom: none; }
+
+.deal-avatar,
+.interest-avatar {
+    width: 32px; height: 32px;
+    border-radius: var(--r-md);
+    background: linear-gradient(135deg, var(--blue-400), var(--blue-600));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 800; color: #fff;
+    flex-shrink: 0; overflow: hidden;
+}
+.interest-avatar { border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #b45309); }
+.deal-avatar img,
+.interest-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.deal-info,
+.interest-info { flex: 1; min-width: 0; }
+
+.deal-startup,
+.interest-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--navy);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.deal-meta,
+.interest-meta { font-size: 0.7rem; color: var(--navy-500); margin-top: 1px; }
+
+/* Stage pills */
+.deal-stage-pill {
+    padding: 3px 9px;
+    border-radius: var(--r-full);
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.stage-introduced    { background: var(--navy-600); color: var(--white); }
+.stage-in_discussion { background: var(--blue-500); color: var(--white); }
+.stage-due_diligence { background: var(--amber-500); color: var(--white); }
+.stage-term_sheet    { background: var(--primary-orange); color: var(--white); }
+.stage-closed        { background: var(--green-500); color: var(--white); }
+
+/* Interest status pills */
+.interest-status-pill {
+    padding: 3px 9px;
+    border-radius: var(--r-full);
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.status-pending   { background: rgba(245, 158, 11, 0.15); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3); }
+.status-accepted  { background: rgba(34, 197, 94, 0.15); color: #16a34a; border: 1px solid rgba(34, 197, 94, 0.3); }
+.status-rejected  { background: rgba(239, 68, 68, 0.15); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.3); }
+.status-withdrawn { background: rgba(74, 37, 27, 0.1); color: var(--navy-500); }
+
+/* Portfolio investment items */
+.port-invest-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--r-md);
+    background: var(--navy-600);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 800; color: var(--white);
+    flex-shrink: 0;
+}
+.port-invest-info { flex: 1; min-width: 0; }
+.port-invest-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--navy);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.port-invest-meta { font-size: 0.7rem; color: var(--navy-500); margin-top: 1px; }
+.port-invest-amount {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--navy);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.port-status-active      { background: rgba(34, 197, 94, 0.15); color: #16a34a; border: 1px solid rgba(34, 197, 94, 0.3); }
+.port-status-exited      { background: rgba(14, 165, 233, 0.15); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.3); }
+.port-status-written_off { background: rgba(239, 68, 68, 0.15); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+/* Empty state */
+.pipeline-empty {
+    text-align: center;
+    padding: 18px 10px;
+    font-size: 0.8rem;
+    color: var(--navy-500);
+    line-height: 1.7;
+    font-style: italic;
+}
+
+
+/* ================================================================
+   RESPONSIVE DESIGN (TABLET & MOBILE)
+================================================================ */
+
+@media (max-width: 992px) {
+    .portfolio-page {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .portfolio-left, .portfolio-right {
+        width: 100%;
+        max-width: 100%;
+        display: block;
+    }
+
+    .portfolio-right {
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .params-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .portfolio-editor-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .portfolio-editor-actions {
+        width: 100%;
+    }
+    
+    .btn-ai-enhance, .btn-save-portfolio {
+        flex: 1; /* Stretch buttons evenly */
+        justify-content: center;
+    }
+
+    .params-grid {
+        grid-template-columns: 1fr; /* Stack inputs on mobile */
+    }
+    
+    .param-span2 {
+        grid-column: span 1;
+    }
+
+    .portfolio-section-word-count {
+        display: none; /* Hide on mobile to save space */
+    }
+
+    .portfolio-section-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .portfolio-ai-btn {
+        justify-content: center;
+        padding: 8px 12px;
+    }
+
+    .ai-result-actions {
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if is_self %}My Profile{% else %}Investor Profile{% endif %} — EISC Investor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/pages.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_profile.css') }}">
+</head>
+<body>
+
+    {% set active_nav = 'profile' %}
+    {% include 'auth/investor/sidebar.html' %}
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+    
+<div class="main-wrap">
+
+    <!-- ── TOP BAR ──────────────────────────────────────────── -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">My <span>Profile</span></div>
+            <div class="topbar-subtitle">How founders see you — build trust, attract the right deals.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!','default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_notifs and unread_notifs > 0 %}<span class="topbar-notif-dot"></span>{% endif %}
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar" title="{{ profile.full_name or profile.username if profile else '' }}">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- ── PAGE CONTENT ─────────────────────────────────────── -->
+    <div class="page-content">
+        <div class="profile-page-wrap">
+
+            <!-- Founder view banner -->
+            <div class="investor-view-banner anim anim-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span>
+                    <strong>Founder View</strong> — This is exactly how your profile appears to entrepreneurs.
+                    A complete investor profile gets <strong>4× more pitch submissions</strong>.
+                </span>
+            </div>
+
+            <!-- ── HERO CARD ─────────────────────────────────── -->
+            <div class="profile-hero anim anim-2">
+                <!-- Banner -->
+                <div class="profile-hero-banner inv-banner"></div>
+
+                <div class="profile-hero-body">
+                    <div class="profile-hero-avatar-row">
+                        <!-- Avatar -->
+                        <div class="profile-hero-avatar" id="avatarPreview"
+                             {% if is_self %}onclick="openModal('editProfileModal')" style="cursor:pointer"{% endif %}>
+                            {% if profile and profile.profile_image_url %}
+                                <img src="{{ profile.profile_image_url }}" alt="" id="avatarImg">
+                            {% else %}
+                                <span id="avatarInitial">
+                                    {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                                </span>
+                            {% endif %}
+                            <div class="avatar-edit-overlay">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                    <circle cx="12" cy="13" r="4"/>
+                                </svg>
+                                Change Photo
+                            </div>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="profile-hero-actions">
+                            {% if is_self %}
+                            <button class="btn-edit-profile" onclick="openModal('editProfileModal')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                Edit Profile
+                            </button>
+                            <button class="btn-share-profile" onclick="copyProfileLink()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/>
+                                    <circle cx="18" cy="19" r="3"/>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                                </svg>
+                                Share Profile
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Identity -->
+                    <div class="profile-identity">
+                        <div class="profile-hero-name" id="displayName">
+                            {{ profile.full_name or profile.username if profile else (is_self and 'Your Name' or 'Investor') }}
+                        </div>
+
+                        <div class="profile-hero-badges">
+                            <!-- Investor type badge -->
+                            <span class="profile-hero-badge inv-badge-type" id="displayRoleBadge">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px">
+                                    <line x1="12" y1="1" x2="12" y2="23"/>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                                {% if profile and profile.investor_type %}
+                                    {{ profile.investor_type }}
+                                {% else %}
+                                    Investor
+                                {% endif %}
+                            </span>
+
+                            {% if profile and profile.is_premium %}
+                            <span class="profile-hero-badge badge-premium">⭐ Premium</span>
+                            {% endif %}
+
+                            {% if profile and profile.is_verified_investor %}
+                            <span class="profile-hero-badge badge-verified-profile">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Verified Investor
+                            </span>
+                            {% endif %}
+
+                            <!-- Admin Verification Status Badge -->
+                            {% if user_authorized == 'authorized' %}
+                            <span class="profile-hero-badge badge-authorized" title="Account approved by admin">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Admin Approved
+                            </span>
+                            {% elif user_authorized == 'rejected' %}
+                            <span class="profile-hero-badge badge-rejected" title="Account not approved by admin">
+                                ⚠️ Pending Review
+                            </span>
+                            {% else %}
+                            <span class="profile-hero-badge badge-pending" title="Account pending admin review">
+                                ⏳ Pending Review
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tagline: org + focus -->
+                        <div class="profile-hero-tagline" id="displayTagline">
+                            {% if profile and profile.firm_name %}
+                                {% if profile.current_position %}
+                                    <strong>{{ profile.current_position }}</strong> at
+                                {% endif %}
+                                <strong>{{ profile.firm_name }}</strong>
+                                {% if profile.investment_focus %}
+                                     · {{ profile.investment_focus }}
+                                {% endif %}
+                            {% else %}
+                                <span style="color:var(--text-muted);font-style:italic">
+                                    Add your firm / organization to complete your profile
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Meta row -->
+                        <div class="profile-hero-meta">
+                            {% if profile and profile.location %}
+                            <span class="profile-meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span id="displayLocation">{{ profile.location }}</span>
+                            </span>
+                            {% endif %}
+
+                            {% if profile and profile.years_of_experience %}
+                            <span class="profile-meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                {{ profile.years_of_experience }}+ years investing
+                            </span>
+                            {% endif %}
+
+                            {% if profile and profile.website_url %}
+                            <a class="profile-meta-item" href="{{ profile.website_url }}" target="_blank">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="2" y1="12" x2="22" y2="12"/>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                </svg>
+                                {{ profile.website_url | replace('https://','') | replace('http://','') | truncate(28, true, '…') }}
+                            </a>
+                            {% endif %}
+
+                            <span class="profile-meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                Member since {{ profile.created_at.strftime('%b %Y') if profile and profile.created_at else '—' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Stats bar -->
+                    <div class="profile-stats-bar">
+                        <div class="profile-stat-item">
+                            <div class="profile-stat-num">{{ profile.total_investments if profile and profile.total_investments else '0' }}</div>
+                            <div class="profile-stat-label">Investments Made</div>
+                        </div>
+                        <div class="profile-stat-item">
+                            <div class="profile-stat-num">{{ profile.startups_connected if profile and profile.startups_connected else '0' }}</div>
+                            <div class="profile-stat-label">Active Portfolio</div>
+                        </div>
+                        <div class="profile-stat-item">
+                            <div class="profile-stat-num">{{ profile.profile_views if profile and profile.profile_views else '0' }}</div>
+                            <div class="profile-stat-label">Profile Views</div>
+                        </div>
+                        <div class="profile-stat-item">
+                            <div class="profile-stat-num" style="color:var(--amber-500)">
+                                {% if profile and profile.investor_rating %}
+                                    ★ {{ '%.1f'|format(profile.investor_rating) }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                            <div class="profile-stat-label">Investor Rating</div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /profile-hero -->
+
+            <!-- ── MAIN GRID ──────────────────────────────────── -->
+            <div class="profile-grid">
+
+                <!-- LEFT COLUMN -->
+                <div>
+
+                    <!-- About -->
+                    <div class="profile-section-card anim anim-3">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                About
+                            </div>
+                            <button class="profile-section-edit-btn" onclick="openEditTab('personal')">Edit</button>
+                        </div>
+                        <div class="profile-section-body">
+                            {% if profile and profile.bio %}
+                                <p class="profile-bio-text" id="displayBio">{{ profile.bio }}</p>
+                            {% else %}
+                                <p class="profile-bio-empty" id="displayBio">
+                                    Add a professional bio — describe your investment philosophy,
+                                    domain expertise, and what makes you the right partner for founders.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Professional Background -->
+                    <div class="profile-section-card anim anim-3">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                                </svg>
+                                Professional Background
+                            </div>
+                            <button class="profile-section-edit-btn" onclick="openEditTab('background')">Edit</button>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="profile-info-grid">
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Current Position</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.current_position) }}" id="dispPosition">
+                                        {{ profile.current_position if profile and profile.current_position else 'Not specified' }}
+                                    </span>
+                                </div>
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Organization / Fund</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.firm_name) }}" id="dispFirmName">
+                                        {{ profile.firm_name if profile and profile.firm_name else 'Not specified' }}
+                                    </span>
+                                </div>
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Years of Experience</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.years_of_experience) }}" id="dispYearsExp">
+                                        {% if profile and profile.years_of_experience %}
+                                            {{ profile.years_of_experience }}+ years
+                                        {% else %}
+                                            Not specified
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Education</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.education) }}" id="dispEducation">
+                                        {{ profile.education if profile and profile.education else 'Not specified' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {% if profile and profile.previous_roles %}
+                            <div style="margin-top:16px">
+                                <div class="profile-info-label" style="margin-bottom:8px">Previous Roles</div>
+                                <p class="profile-bio-text" id="dispPreviousRoles" style="font-size:0.84rem">
+                                    {{ profile.previous_roles }}
+                                </p>
+                            </div>
+                            {% else %}
+                            <div style="margin-top:16px" id="dispPreviousRoles">
+                                <p class="profile-bio-empty" style="font-size:0.84rem">
+                                    Add previous roles and operator experience to build founder trust.
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Links & Social -->
+                    <div class="profile-section-card anim anim-5">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                </svg>
+                                Links &amp; Social
+                            </div>
+                            <button class="profile-section-edit-btn" onclick="openEditTab('links')">Edit</button>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="social-links-list" id="displaySocial">
+                                {% if profile and profile.website_url %}
+                                <a class="social-link-item" href="{{ profile.website_url }}" target="_blank">
+                                    <div class="social-link-icon icon-web">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="2" y1="12" x2="22" y2="12"/>
+                                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="social-link-text">
+                                        <div class="social-link-name">Website / Fund</div>
+                                        <div class="social-link-url">{{ profile.website_url | truncate(40,true,'…') }}</div>
+                                    </div>
+                                    <div class="social-link-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                                </a>
+                                {% endif %}
+
+                                {% if profile and profile.linkedin_url %}
+                                <a class="social-link-item" href="{{ profile.linkedin_url }}" target="_blank">
+                                    <div class="social-link-icon icon-linkedin">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                                            <rect x="2" y="9" width="4" height="12"/>
+                                            <circle cx="4" cy="4" r="2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="social-link-text">
+                                        <div class="social-link-name">LinkedIn</div>
+                                        <div class="social-link-url">{{ profile.linkedin_url | truncate(40,true,'…') }}</div>
+                                    </div>
+                                    <div class="social-link-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                                </a>
+                                {% endif %}
+
+                                {% if profile and profile.twitter_url %}
+                                <a class="social-link-item" href="{{ profile.twitter_url }}" target="_blank">
+                                    <div class="social-link-icon icon-twitter">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="social-link-text">
+                                        <div class="social-link-name">Twitter / X</div>
+                                        <div class="social-link-url">{{ profile.twitter_url | truncate(40,true,'…') }}</div>
+                                    </div>
+                                    <div class="social-link-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                                </a>
+                                {% endif %}
+
+                                {% if profile and profile.crunchbase_url %}
+                                <a class="social-link-item" href="{{ profile.crunchbase_url }}" target="_blank">
+                                    <div class="social-link-icon icon-crunchbase">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zM9 8.25H7.5v7.5H9v-3h1.5a3 3 0 0 0 0-6H9v1.5zm1.5 3H9v-1.5h1.5a1.5 1.5 0 0 1 0 3z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="social-link-text">
+                                        <div class="social-link-name">Crunchbase</div>
+                                        <div class="social-link-url">{{ profile.crunchbase_url | truncate(40,true,'…') }}</div>
+                                    </div>
+                                    <div class="social-link-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                                </a>
+                                {% endif %}
+
+                                {% if not (profile and (profile.website_url or profile.linkedin_url or profile.twitter_url or profile.crunchbase_url)) %}
+                                <p class="profile-bio-empty">
+                                    Add your website, LinkedIn and Crunchbase to build credibility with founders.
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /LEFT COLUMN -->
+
+                <!-- RIGHT COLUMN -->
+                <div>
+
+                    <!-- Profile Completeness -->
+                    <div class="profile-section-card anim anim-4" style="margin-bottom:18px">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                </svg>
+                                Profile Completeness
+                            </div>
+                        </div>
+                        <div class="profile-section-body" style="text-align:center;padding-bottom:10px">
+                            <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:var(--teal-600)">
+                                {{ profile_completeness }}%
+                            </div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:16px">Profile Strength</div>
+                            <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin-bottom:16px">
+                                <div style="height:100%;
+                                            background:linear-gradient(90deg,var(--teal-500),var(--blue-500));
+                                            border-radius:var(--r-full);
+                                            width:{{ profile_completeness }}%;
+                                            transition:width 1s ease">
+                                </div>
+                            </div>
+
+                            <!-- Checklist -->
+                            <div style="display:flex;flex-direction:column;gap:8px;text-align:left">
+                                {% set checks = [
+                                    ('Profile photo',       profile and profile.profile_image_url),
+                                    ('Full name',           profile and profile.full_name),
+                                    ('Bio / About',         profile and profile.bio),
+                                    ('Investor type',       profile and profile.investor_type),
+                                    ('Firm / Organization', profile and profile.firm_name),
+                                    ('Investment focus',    profile and profile.investment_focus),
+                                    ('LinkedIn',            profile and profile.linkedin_url),
+                                    ('Location',            profile and profile.location),
+                                ] %}
+                                {% for label, done in checks %}
+                                <div style="display:flex;align-items:center;gap:8px;font-size:0.77rem;">
+                                    {% if done %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;color:var(--green-500);flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span style="color:var(--gray-700)">{{ label }}</span>
+                                    {% else %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--gray-300);flex-shrink:0"><circle cx="12" cy="12" r="10"/></svg>
+                                    <span style="color:var(--text-muted)">{{ label }}</span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /RIGHT COLUMN -->
+
+            </div><!-- /profile-grid -->
+        </div><!-- /profile-page-wrap -->
+    </div><!-- /page-content -->
+</div><!-- /main-wrap -->
+
+
+<!-- ================================================================
+     EDIT PROFILE MODAL — MULTI-TAB
+     ================================================================ -->
+<div class="modal-overlay" id="editProfileModal">
+    <div class="modal" style="width:620px;">
+        <div class="modal-header" style="background:var(--gray-50)">
+            <div class="modal-header-title">Edit Investor Profile</div>
+            <button class="modal-close" data-close-modal="editProfileModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="edit-modal-tabs">
+            <button class="edit-tab-btn active" data-tab="personal">Personal</button>
+            <button class="edit-tab-btn" data-tab="background">Background</button>
+            <button class="edit-tab-btn" data-tab="investment">Investment</button>
+            <button class="edit-tab-btn" data-tab="portfolio">Portfolio</button>
+            <button class="edit-tab-btn" data-tab="links">Links</button>
+        </div>
+
+        <form id="editInvestorProfileForm">
+            <div class="modal-body" style="padding-top:18px">
+
+                <!-- TAB 1: Personal -->
+                <div class="edit-tab-panel active" id="tab-personal">
+                    <!-- Avatar upload -->
+                    <div class="avatar-upload-section">
+                        <div class="avatar-upload-preview" id="modalAvatarPreview"
+                             style="background:linear-gradient(135deg,#f59e0b,#b45309)">
+                            {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                        </div>
+                        <div class="avatar-upload-info">
+                            <div class="avatar-upload-title">Profile Photo</div>
+                            <div class="avatar-upload-sub">JPG, PNG up to 5MB. Square images work best.</div>
+                            <label class="avatar-upload-btn" for="avatarFileInput">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Upload Photo
+                                <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input class="form-input" id="ep_full_name" type="text"
+                                   placeholder="Your full name"
+                                   value="{{ profile.full_name or profile.username if profile else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Investor Type</label>
+                            <select class="form-select" id="ep_investor_type">
+                                {% set it = profile.investor_type if profile and profile.investor_type else '' %}
+                                <option value="">Select type…</option>
+                                <option value="Angel Investor"  {{ 'selected' if it == 'Angel Investor' }}>Angel Investor</option>
+                                <option value="Venture Capitalist" {{ 'selected' if it == 'Venture Capitalist' }}>Venture Capitalist</option>
+                                <option value="Fund Manager"    {{ 'selected' if it == 'Fund Manager' }}>Fund Manager</option>
+                                <option value="Family Office"   {{ 'selected' if it == 'Family Office' }}>Family Office</option>
+                                <option value="Corporate VC"    {{ 'selected' if it == 'Corporate VC' }}>Corporate VC</option>
+                                <option value="Impact Investor" {{ 'selected' if it == 'Impact Investor' }}>Impact Investor</option>
+                                <option value="Syndicate Lead"  {{ 'selected' if it == 'Syndicate Lead' }}>Syndicate Lead</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bio / About</label>
+                        <textarea class="form-textarea" id="ep_bio" style="min-height:110px"
+                                  placeholder="Investment philosophy, domain expertise, what you look for in founders…">{{ profile.bio if profile and profile.bio else '' }}</textarea>
+                        <div style="text-align:right;font-size:0.7rem;color:var(--text-muted);margin-top:4px" id="bioCharCount">0 / 600</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input class="form-input" id="ep_location" type="text"
+                                   placeholder="e.g. Mumbai, India"
+                                   value="{{ profile.location if profile and profile.location else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Geography of Investment</label>
+                            <input class="form-input" id="ep_geography" type="text"
+                                   placeholder="e.g. India, Southeast Asia"
+                                   value="{{ profile.geography if profile and profile.geography else '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Background -->
+                <div class="edit-tab-panel" id="tab-background">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Current Position / Title</label>
+                            <input class="form-input" id="ep_current_position" type="text"
+                                   placeholder="e.g. Managing Partner, General Partner"
+                                   value="{{ profile.current_position if profile and profile.current_position else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Organization / Fund Name</label>
+                            <input class="form-input" id="ep_firm_name" type="text"
+                                   placeholder="e.g. Sequoia Capital India"
+                                   value="{{ profile.firm_name if profile and profile.firm_name else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Years of Experience</label>
+                            <input class="form-input" id="ep_years_exp" type="number"
+                                   placeholder="e.g. 10" min="0" max="60"
+                                   value="{{ profile.years_of_experience if profile and profile.years_of_experience else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Education</label>
+                            <input class="form-input" id="ep_education" type="text"
+                                   placeholder="e.g. MBA, IIM Ahmedabad"
+                                   value="{{ profile.education if profile and profile.education else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Previous Roles <span style="font-weight:400;color:var(--gray-400)">(operator / founder experience)</span></label>
+                        <textarea class="form-textarea" id="ep_previous_roles" style="min-height:100px"
+                                  placeholder="e.g. Co-founder at XYZ (acquired 2019), VP Product at ABC Corp…">{{ profile.previous_roles if profile and profile.previous_roles else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Investment Preferences -->
+                <div class="edit-tab-panel" id="tab-investment">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Investment Focus / Sectors</label>
+                            <input class="form-input" id="ep_investment_focus" type="text"
+                                   placeholder="e.g. FinTech, SaaS, HealthTech"
+                                   value="{{ profile.investment_focus if profile and profile.investment_focus else '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: Portfolio -->
+                <div class="edit-tab-panel" id="tab-portfolio">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Preferred Sectors</label>
+                            <input class="form-input" id="ep_preferred_sectors" type="text"
+                                   placeholder="e.g. SaaS, HealthTech, FinTech"
+                                   value="{{ portfolio.preferred_sectors if portfolio and portfolio.preferred_sectors else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Investment Stage</label>
+                            <select class="form-select" id="ep_investment_stage">
+                                {% set stage = portfolio.investment_stage if portfolio and portfolio.investment_stage else '' %}
+                                <option value="">Select stage…</option>
+                                <option value="Seed" {{ 'selected' if stage == 'Seed' }}>Seed</option>
+                                <option value="Pre-Series A" {{ 'selected' if stage == 'Pre-Series A' }}>Pre-Series A</option>
+                                <option value="Series A" {{ 'selected' if stage == 'Series A' }}>Series A</option>
+                                <option value="Series B" {{ 'selected' if stage == 'Series B' }}>Series B</option>
+                                <option value="Series C+" {{ 'selected' if stage == 'Series C+' }}>Series C+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Investment Thesis</label>
+                        <textarea class="form-textarea" id="ep_investment_thesis" style="min-height:100px"
+                                  placeholder="Your investment philosophy, criteria, and thesis…">{{ portfolio.investment_thesis if portfolio and portfolio.investment_thesis else '' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Portfolio Highlights</label>
+                        <textarea class="form-textarea" id="ep_portfolio_highlights" style="min-height:100px"
+                                  placeholder="Notable exits, portfolio companies, achievements…">{{ portfolio.portfolio_highlights if portfolio and portfolio.portfolio_highlights else '' }}</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Min Ticket Size (USD)</label>
+                            <input class="form-input" id="ep_min_ticket" type="number"
+                                   placeholder="e.g. 25000"
+                                   value="{{ portfolio.min_ticket_size if portfolio and portfolio.min_ticket_size else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max Ticket Size (USD)</label>
+                            <input class="form-input" id="ep_max_ticket" type="number"
+                                   placeholder="e.g. 500000"
+                                   value="{{ portfolio.max_ticket_size if portfolio and portfolio.max_ticket_size else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Available Funds (USD)</label>
+                            <input class="form-input" id="ep_available_funds" type="number"
+                                   placeholder="e.g. 1000000"
+                                   value="{{ portfolio.available_funds if portfolio and portfolio.available_funds else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Deployment %</label>
+                            <input class="form-input" id="ep_deployment_pct" type="number"
+                                   placeholder="e.g. 65" min="0" max="100"
+                                   value="{{ portfolio.investment_utilization_pct if portfolio and portfolio.investment_utilization_pct else '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: Links & Social -->
+                <div class="edit-tab-panel" id="tab-links">
+                    <div class="form-group">
+                        <label class="form-label">Website / Fund Website</label>
+                        <input class="form-input" id="ep_website" type="url"
+                               placeholder="https://yourfund.com"
+                               value="{{ profile.website_url if profile and profile.website_url else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">LinkedIn</label>
+                        <input class="form-input" id="ep_linkedin" type="url"
+                               placeholder="https://linkedin.com/in/yourname"
+                               value="{{ profile.linkedin_url if profile and profile.linkedin_url else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Twitter / X</label>
+                        <input class="form-input" id="ep_twitter" type="url"
+                               placeholder="https://x.com/yourhandle"
+                               value="{{ profile.twitter_url if profile and profile.twitter_url else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Crunchbase <span style="font-weight:400;color:var(--gray-400)">(optional)</span></label>
+                        <input class="form-input" id="ep_crunchbase" type="url"
+                               placeholder="https://crunchbase.com/person/…"
+                               value="{{ profile.crunchbase_url if profile and profile.crunchbase_url else '' }}">
+                    </div>
+                </div>
+
+            </div><!-- /modal-body -->
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-close-modal="editProfileModal">Cancel</button>
+                <button type="submit" class="btn-submit" id="investorSaveBtn">Save Profile</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Premium Modal -->
+<div class="modal-overlay" id="premiumModal">
+    <div class="modal" style="width:500px">
+        <div class="modal-header">
+            <div class="modal-header-title">⭐ Upgrade to Premium</div>
+            <button class="modal-close" data-close-modal="premiumModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body" style="text-align:center;padding:24px">
+            <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#f59e0b,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px">
+                Unlock Premium Investor Access
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:20px">Priority deal flow, verified badge, advanced analytics.</p>
+            <button onclick="showToast('Payment integration coming soon!','default')"
+                    style="display:block;width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:var(--r-md);font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">
+                ⭐ Get Started
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/investor/investor_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='js/investor/investor_profile.js') }}"></script>
+</body>
+</html>

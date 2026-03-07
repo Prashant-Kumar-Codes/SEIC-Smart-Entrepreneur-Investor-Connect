@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meetings — EISC Investor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_dashboard.css') }}">
+</head>
+<body>
+
+{% set active_nav = 'meetings' %}
+{% include 'auth/investor/sidebar.html' %}
+
+<div class="main-wrap">
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">Scheduled <span>Meetings</span></div>
+            <div class="topbar-subtitle">First calls and structured discussions with founders.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!','default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+        <!-- Meetings Grid -->
+        {% if meetings %}
+        <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
+            {% for meeting in meetings %}
+            <div class="card anim anim-1" style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px">
+                
+                <!-- Status Badge -->
+                <div style="display: inline-block; padding: 6px 10px; background: 
+                    {% if meeting.status == 'scheduled' %}#dbeafe; color: #0369a1
+                    {% elif meeting.status == 'completed' %}#d1fae5; color: #065f46
+                    {% else %}#fee2e2; color: #991b1b
+                    {% endif %};
+                    border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-bottom: 12px">
+                    {{ meeting.status.replace('_', ' ').title() }}
+                </div>
+
+                <!-- Founder info -->
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px">
+                    <img src="{{ meeting.profile_image_url or '' }}" alt="" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #e5e7eb">
+                    <div>
+                        <div style="font-weight: 700; color: #111827">{{ meeting.startup_name or 'Unnamed' }}</div>
+                        <div style="font-size: 0.85rem; color: #6b7280">by {{ meeting.username or 'Unknown' }}</div>
+                    </div>
+                </div>
+
+                <!-- Details -->
+                <div style="background: #f9fafb; border-radius: 8px; padding: 12px; margin-bottom: 12px">
+                    <div style="margin-bottom: 8px">
+                        <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600; margin-bottom: 2px">📅 Date & Time</div>
+                        <div style="font-weight: 600; color: #111827">
+                            {% if meeting.scheduled_at %}
+                                {{ meeting.scheduled_at.strftime('%b %d, %Y') }} at {{ meeting.scheduled_at.strftime('%I:%M %p') }}
+                            {% else %}
+                                TBD
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600; margin-bottom: 2px">📞 Type</div>
+                        <div style="font-weight: 600; color: #111827">{{ meeting.meeting_type or 'Video Call' }}</div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div style="display: flex; gap: 8px; margin-top: 12px">
+                    {% if meeting.status == 'scheduled' %}
+                    <button onclick="recordMeetingDecision({{ meeting.meeting_id }}, 'positive')" style="flex: 1; padding: 8px; background: #10b981; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer">
+                        ✓ Positive
+                    </button>
+                    <button onclick="recordMeetingDecision({{ meeting.meeting_id }}, 'neutral')" style="flex: 1; padding: 8px; background: #f59e0b; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer">
+                        — Neutral
+                    </button>
+                    <button onclick="recordMeetingDecision({{ meeting.meeting_id }}, 'negative')" style="flex: 1; padding: 8px; background: #ef4444; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer">
+                        ✗ Negative
+                    </button>
+                    {% else %}
+                    <div style="padding: 8px; background: #f3f4f6; border-radius: 6px; flex: 1; text-align: center; font-size: 0.85rem; color: #6b7280">
+                        Meeting concluded
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; background: #f9fafb; border-radius: 12px">
+            <div style="font-size: 2.5rem; margin-bottom: 12px">📅</div>
+            <div style="font-weight: 700; font-size: 1.1rem; color: #111827; margin-bottom: 6px">No Meetings Scheduled</div>
+            <div style="color: #6b7280; margin-bottom: 20px">Schedule meetings with founders directly from matched startups or your interests list</div>
+            <a href="{{ url_for('match_auth.investor_matches') }}" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600">
+                View Matched Startups →
+            </a>
+        </div>
+        {% endif %}
+
+    </div><!-- /page-content -->
+</div><!-- /main-wrap -->
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+<script>
+async function recordMeetingDecision(meetingId, decision) {
+    try {
+        const res = await fetch(`/api/investor/meetings/${meetingId}/decide`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ decision: decision })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Decision recorded', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Error recording decision', 'error');
+        }
+    } catch (e) {
+        showToast('Network error', 'error');
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+{% block title %}SEIC | AI-Powered VC Investment Platform{% endblock %}
+
+{% block style %}
+    {{ super() }}
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+    <div class="scroll-progress"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">SEIC</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How it works</a>
+                <a href="#security">Security</a>
+                <a href="#faq">FAQ</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="nav-right">
+                <a href="{{url_for('login_signup_auth.login_signup')}}" class="btn btn-primary">Get Started</a>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu">
+        <div class="mobile-menu-content">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">Process</a>
+            <a href="#contact">Contact</a>
+            <a href="#faq">FAQ</a>
+            <a href="#security">Security</a>
+            <a href="#" class="btn btn-primary">Get Started</a>
+        </div>
+    </div>
+
+    <header class="hero-section">
+        <div class="container hero-grid">
+            <div class="hero-copy fade-up">
+                <div class="eyebrow pill">AI-Powered Investment Infrastructure</div>
+                <h1>Raise and deploy capital with clarity, speed, and trust</h1>
+                <p class="lead">SEIC screens deals with AI, verifies investor intent, and moves serious conversations forward with structured data and secure workflows.</p>
+                <div class="hero-cta">
+                    <a href="{{url_for('login_signup_auth.login_signup')}}" class="btn btn-primary">Get Started</a>
+                    <a href="#features" class="btn btn-outline">Explore Platform</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat"><span class="num" data-target="200">0</span>+ vetted criteria</div>
+                    <div class="divider-dot"></div>
+                    <div class="stat"><span class="num" data-target="36">0</span>B+ capital insights</div>
+                    <div class="divider-dot"></div>
+                    <div class="stat"><span class="num" data-target="14">0</span>+ markets focus</div>
+                </div>
+            </div>
+            <div class="hero-visual fade-up delay-100">
+                <div class="sphere s1"></div>
+                <div class="sphere s2"></div>
+                <div class="floating-card fc1">
+                    <div class="fc-title">Deal Fit Score</div>
+                    <div class="fc-value">86</div>
+                </div>
+                <div class="floating-card fc2">
+                    <div class="fc-title">Investor Intent</div>
+                    <div class="fc-value">Verified</div>
+                </div>
+                <div class="floating-card fc3">
+                    <div class="fc-title">Risk Flags</div>
+                    <div class="fc-value">Low</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="trust-bar">
+        <div class="container trust-bar-inner fade-up">
+            <div class="trust-label">Trusted by operators and investors</div>
+            <div class="logo-badges">
+                <div class="logo-badge">Aurora Capital</div>
+                <div class="logo-badge">NorthStar</div>
+                <div class="logo-badge">Vertex</div>
+                <div class="logo-badge">Nimbus</div>
+                <div class="logo-badge">Atlas</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" id="features">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">The Platform</span>
+                <h2>Everything you need to make decisive investments</h2>
+                <p class="section-description">From AI screening to secure data rooms, run a complete, intent-led evaluation experience.</p>
+            </div>
+
+            <div class="platform-grid fade-up delay-100">
+                <div class="glassy-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5L12 3zm0 7.5l9 4.5-9 4.5-9-4.5 9-4.5z"/></svg>
+                    </div>
+                    <h4>AI Deal Screening</h4>
+                    <p>Summaries, risk flags, and fit scoring prepared instantly for every deck.</p>
+                </div>
+                <div class="glassy-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 017 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 017-7zm0 9.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>
+                    </div>
+                    <h4>Investor Intent</h4>
+                    <p>Advance only high-intent leads. Reduce noise and shorten cycles.</p>
+                </div>
+                <div class="glassy-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h12M3 18h6"/></svg>
+                    </div>
+                    <h4>Financial Insights</h4>
+                    <p>Structured metrics and trendlines to understand traction and efficiency.</p>
+                </div>
+                <div class="glassy-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M4 7a2 2 0 012-2h12l2 4v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7z"/></svg>
+                    </div>
+                    <h4>Secure Data Rooms</h4>
+                    <p>Granular permissions, audit trails, and encrypted document workflows.</p>
+                </div>
+                <div class="glassy-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 2l4 7H8l4-7zm0 20l-4-7h8l-4 7zM2 12l7-4v8l-7-4zm20 0l-7 4V8l7 4z"/></svg>
+                    </div>
+                    <h4>Smart Routing</h4>
+                    <p>Match startups to relevant investors based on thesis and stage.</p>
+                </div>
+                <div class="glassy-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 1l9 5v12l-9 5-9-5V6l9-5zm0 4l-5 3v6l5 3 5-3V8l-5-3z"/></svg>
+                    </div>
+                    <h4>Compliance & Audit</h4>
+                    <p>Full activity history and policies to support governance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" id="audience">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">Built for both sides</span>
+                <h2>Designed for founders and investors</h2>
+            </div>
+            <div class="audience-grid fade-up delay-100">
+                <div class="audience-card">
+                    <div class="audience-title">For Founders</div>
+                    <ul class="audience-list">
+                        <li>AI answers investor questions 24/7</li>
+                        <li>One link with structured story and metrics</li>
+                        <li>Meet only when interest is verified</li>
+                    </ul>
+                    <a href="{{url_for('login_signup_auth.login_signup')}}" class="btn btn-primary">Start fundraising</a>
+                </div>
+                <div class="audience-card">
+                    <div class="audience-title">For Investors</div>
+                    <ul class="audience-list">
+                        <li>Instant summaries and financial signals</li>
+                        <li>Noise-free pipeline with matched deals</li>
+                        <li>Secure access and full audit trails</li>
+                    </ul>
+                    <a href="{{url_for('login_signup_auth.login_signup')}}" class="btn btn-outline">Evaluate deals</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" id="how-it-works">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">How it works</span>
+                <h2>Progress with intent, not noise</h2>
+            </div>
+            <div class="process-horizontal fade-up delay-100">
+                <div class="p-step">
+                    <div class="p-index">01</div>
+                    <div class="p-title">Onboard</div>
+                    <div class="p-text">Upload decks, KPIs, and docs</div>
+                </div>
+                <div class="p-step">
+                    <div class="p-index">02</div>
+                    <div class="p-title">AI Screening</div>
+                    <div class="p-text">Summaries, fit score, and risks</div>
+                </div>
+                <div class="p-step">
+                    <div class="p-index">03</div>
+                    <div class="p-title">Intent Verify</div>
+                    <div class="p-text">Advance only serious leads</div>
+                </div>
+                <div class="p-step">
+                    <div class="p-index">04</div>
+                    <div class="p-title">Meet & Decide</div>
+                    <div class="p-text">Structured, faster diligence</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" id="security">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">Security & Compliance</span>
+                <h2>Enterprise-grade protection for sensitive data</h2>
+            </div>
+            <div class="security-grid fade-up delay-100">
+                <div class="security-badge">Encrypted at rest and in transit</div>
+                <div class="security-badge">Granular roles and permissions</div>
+                <div class="security-badge">Detailed audit logs</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" id="testimonials">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">Customer stories</span>
+                <h2>Proven impact</h2>
+            </div>
+            <div class="testimonials fade-up delay-100">
+                <div class="slides-track">
+                    <div class="t-slide">
+                        <div class="t-quote">“We cut weeks of back-and-forth. Every deck arrives structured and scored.”</div>
+                        <div class="t-author">VC Partner</div>
+                    </div>
+                    <div class="t-slide">
+                        <div class="t-quote">“Only serious conversations now. Our team spends time where it matters.”</div>
+                        <div class="t-author">Growth Investor</div>
+                    </div>
+                    <div class="t-slide">
+                        <div class="t-quote">“Raising was calm for the first time. Data rooms and AI did the heavy lifting.”</div>
+                        <div class="t-author">Founder</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" id="faq">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">FAQ</span>
+                <h2>Everything you need to know</h2>
+            </div>
+            <div class="faq fade-up delay-100">
+                <div class="faq-item">
+                    <button class="faq-q">Do I need a deck to start?</button>
+                    <div class="faq-a">You can begin with basic metrics. Upload documents anytime and the AI keeps evaluations updated.</div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q">Is my data secure?</button>
+                    <div class="faq-a">Data is encrypted at rest and in transit, with roles, permissions, and audit logs for control.</div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q">Who sees my information?</button>
+                    <div class="faq-a">Only matched investors with permission can access your materials; access is fully revocable.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-band">
+        <div class="container cta-inner">
+            <div class="cta-copy">
+                <h2>Move faster with intent-led capital</h2>
+                <p>Join SEIC and experience a modern, structured path to fundraising and investment.</p>
+            </div>
+            <div class="cta-actions">
+                <a href="{{url_for('login_signup_auth.login_signup')}}" class="btn btn-primary">Get Started</a>
+                <a href="#features" class="btn btn-outline">See Platform</a>
+            </div>
+        </div>
+    </section>
+
+    <div class="full-width-image footer-hero fade-up parallax" data-depth="0.12">
+        <img src="{{ url_for('static', filename='images/opportunity.jpg') }}" alt="Opportunity Landscape">
+    </div>
+
+    <footer class="main-footer" id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <h2>Connect with SEIC</h2>
+                <p>Experience intelligent fundraising designed for serious investors and ambitious founders.</p>
+                <a href="#" class="btn btn-primary">Start Your Journey</a>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">LinkedIn</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2026 SEIC. All Rights Reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+{% endblock %}
+
+{% block script %}
+
+    {{ super() }}
+
+    <script>
+        // --- ANIMATION SCRIPT ---
+        
+        // 1. Scroll Reveal (Intersection Observer)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-up, .reveal-left, .reveal-right, .scale-in').forEach(el => observer.observe(el));
+
+        // 2. Custom Cursor Logic (without hover expansion)
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        // 3. Hamburger Menu Toggle
+        const hamburger = document.querySelector('.hamburger');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        const body = document.body;
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            body.classList.toggle('menu-open');
+        });
+
+        // Close menu when clicking on a link
+        document.querySelectorAll('.mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                body.classList.remove('menu-open');
+            });
+        });
+
+        // Close menu when clicking outside
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target === mobileMenu) {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                body.classList.remove('menu-open');
+            }
+        });
+
+        const supportsTilt = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        if (supportsTilt) {
+            document.querySelectorAll('.tilt').forEach(card => {
+                let rect;
+                const reset = () => {
+                    card.style.transform = '';
+                };
+                card.addEventListener('mouseenter', () => {
+                    rect = card.getBoundingClientRect();
+                });
+                card.addEventListener('mousemove', (e) => {
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const rx = ((y / rect.height) - 0.5) * -10;
+                    const ry = ((x / rect.width) - 0.5) * 10;
+                    card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(10px)`;
+                });
+                card.addEventListener('mouseleave', reset);
+            });
+        }
+
+        const progress = document.querySelector('.scroll-progress');
+        const navbar = document.querySelector('.navbar');
+        const parallaxEls = Array.from(document.querySelectorAll('.parallax'));
+        let ticking = false;
+        const onScroll = () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            if (progress) progress.style.width = `${percent}%`;
+            if (navbar) {
+                if (scrollTop > 10) navbar.classList.add('scrolled');
+                else navbar.classList.remove('scrolled');
+            }
+            parallaxEls.forEach(el => {
+                const img = el.querySelector('img') || el;
+                const rect = el.getBoundingClientRect();
+                const inView = rect.top < window.innerHeight && rect.bottom > 0;
+                if (!inView) return;
+                const depth = el.dataset.depth ? parseFloat(el.dataset.depth) : 0.2;
+                const offset = (rect.top - window.innerHeight / 2) * depth;
+                img.style.transform = `translateY(${offset}px)`;
+            });
+            ticking = false;
+        };
+        const scrollHandler = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(onScroll);
+                ticking = true;
+            }
+        };
+        window.addEventListener('scroll', scrollHandler, { passive: true });
+        onScroll();
+
+        const counters = document.querySelectorAll('.hero-stats .num');
+        counters.forEach(el => {
+            const target = parseInt(el.dataset.target || '0', 10);
+            let current = 0;
+            const step = Math.ceil(target / 60);
+            const inc = () => {
+                current += step;
+                if (current >= target) {
+                    el.textContent = target;
+                } else {
+                    el.textContent = current;
+                    requestAnimationFrame(inc);
+                }
+            };
+            inc();
+        });
+
+        const track = document.querySelector('.slides-track');
+        if (track) {
+            let idx = 0;
+            setInterval(() => {
+                idx = (idx + 1) % 3;
+                track.style.transform = `translateX(-${idx * 100}%)`;
+            }, 5000);
+        }
+
+        document.querySelectorAll('.faq-item .faq-q').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.parentElement;
+                item.classList.toggle('open');
+            });
+        });
+
+    </script>
+
+{% endblock %}

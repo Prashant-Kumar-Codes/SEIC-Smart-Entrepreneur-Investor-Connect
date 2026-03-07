@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+{% block title %}SEIC | Smart Entrepreneur Investor Connect{% endblock %}
+
+{% block style %}
+    {{ super() }}
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+    <div class="scroll-progress"></div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--primary)" style="margin-right: 8px; vertical-align: middle;">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+                SEIC
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How it works</a>
+                <a href="#security">Security</a>
+                <a href="#faq">FAQ</a>
+                <a href="#contact" id="contact">Contact</a>
+            </div>
+            <div class="nav-right">
+                <a href="{{url_for('login_signup_auth.login_signup')}}" class="btn btn-primary">Get Started</a>
+                <div class="hamburger">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu">
+        <div class="mobile-menu-content">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#contact">Contact</a>
+            <a href="#faq">FAQ</a>
+            <a href="#security">Security</a>
+            <a href="{{url_for('login_signup_auth.login_signup')}}" class="btn btn-primary">Get Started</a>
+        </div>
+    </div>
+
+    <header class="hero-section">
+        <div class="container center-text">
+            <div class="hero-copy fade-up">
+                <span class="sub-label terminal-label">AUTONOMOUS VENTURE INTERMEDIARY</span>
+                <h1>AI-Powered <br><span class="highlight-text">Investment</span> Infrastructure.</h1>
+                <p class="lead">Raise and deploy capital with clarity, speed, and verified intent. SEIC screens opportunities with AI, verifies investor intent before meetings, and moves only serious conversations forward through structured data, secure workflows, and intelligent deal routing.</p>
+                <div class="hero-cta">
+                    <a href="{{url_for('login_signup_auth.login_signup')}}" class="btn btn-primary">Submit Deck</a>
+                    <a href="#features" class="btn btn-outline">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                        Discovery Demo
+                    </a>
+                </div>
+            </div>
+            
+            <div class="hero-video-wrapper scale-in delay-200">
+                <div class="video-glass-border">
+                    <video class="hero-video-el" autoplay muted playsinline loop poster="{{ url_for('static', filename='images/hero_section.jpg') }}">
+                        <source src="{{ url_for('static', filename='videos/Investor_and_Entrepreneur_Meeting_Video.mp4') }}" type="video/mp4">
+                        <source src="{{ url_for('static', filename='videos/Investor_and_Entrepreneur_Meeting_Video.webm') }}" type="video/webm">
+                    </video>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="trust-bar stats-banner fade-up">
+        <div class="container trust-bar-inner">
+            <div class="stat-block">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div class="stat-info">
+                    <span class="num" data-target="200">0</span>+
+                    <span class="stat-label">Deal Evaluation Criteria</span>
+                </div>
+            </div>
+            <div class="stat-block">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <div class="stat-info">
+                    <span class="num" data-target="36">0</span>B+
+                    <span class="stat-label">Capital Pattern Insights</span>
+                </div>
+            </div>
+            <div class="stat-block">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                <div class="stat-info">
+                    <span class="num" data-target="14">0</span>+
+                    <span class="stat-label">Active Market Focus</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding bg-white" id="how-it-works">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">WORKING PROCESS</span>
+                <h2>Our seamless moving process</h2>
+            </div>
+            <div class="process-horizontal process-cards fade-up delay-100">
+                <div class="p-step saas-card">
+                    <div class="p-index">01</div>
+                    <div class="p-title">Onboard</div>
+                    <div class="p-text">Upload decks, KPIs, projections, and documentation into a secure structured profile.</div>
+                </div>
+                <div class="p-step saas-card">
+                    <div class="p-index">02</div>
+                    <div class="p-title">AI Screening</div>
+                    <div class="p-text">Receive instant executive summaries, fit scoring, risk indicators, and structured financial insights.</div>
+                </div>
+                <div class="p-step saas-card">
+                    <div class="p-index">03</div>
+                    <div class="p-title">Intent Verification</div>
+                    <div class="p-text">AI interacts with investors, qualifies seriousness, and advances only high-alignment conversations.</div>
+                </div>
+                <div class="p-step saas-card">
+                    <div class="p-index">04</div>
+                    <div class="p-title">Meet & Decide</div>
+                    <div class="p-text">Conduct structured in-app meetings, manage due diligence, and move toward confident decisions.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding bg-blue" id="features">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">THE PLATFORM</span>
+                <h2>Everything you need to make decisive investments.</h2>
+                <p class="section-description">From AI screening to secure data rooms, SEIC delivers a complete, intent-led evaluation infrastructure.</p>
+            </div>
+
+            <div class="platform-grid fade-up delay-100">
+                <div class="glassy-card saas-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5L12 3zm0 7.5l9 4.5-9 4.5-9-4.5 9-4.5z"/></svg>
+                    </div>
+                    <h4>AI Deal Screening</h4>
+                    <p>Instant executive summaries, structured metrics, risk flags, and investment-fit scoring generated for every pitch deck.</p>
+                </div>
+                <div class="glassy-card saas-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 017 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 017-7zm0 9.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>
+                    </div>
+                    <h4>Investor Intent Verification</h4>
+                    <p>Advance only high-intent investors. Eliminate noise and reduce wasted founder time.</p>
+                </div>
+                <div class="glassy-card saas-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h12M3 18h6"/></svg>
+                    </div>
+                    <h4>Financial Intelligence</h4>
+                    <p>Structured KPIs, traction trendlines, burn analysis, CAC/LTV insights, and capital efficiency signals.</p>
+                </div>
+                <div class="glassy-card saas-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M4 7a2 2 0 012-2h12l2 4v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7z"/></svg>
+                    </div>
+                    <h4>Secure Data Rooms</h4>
+                    <p>Granular permissions, encrypted storage, full audit logs, and secure document workflows.</p>
+                </div>
+                <div class="glassy-card saas-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 2l4 7H8l4-7zm0 20l-4-7h8l-4 7zM2 12l7-4v8l-7-4zm20 0l-7 4V8l7 4z"/></svg>
+                    </div>
+                    <h4>Smart Deal Routing</h4>
+                    <p>Match startups to relevant investors based on thesis alignment, ticket size, geography, and stage preference.</p>
+                </div>
+                <div class="glassy-card saas-card tilt">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12 1l9 5v12l-9 5-9-5V6l9-5zm0 4l-5 3v6l5 3 5-3V8l-5-3z"/></svg>
+                    </div>
+                    <h4>Compliance & Governance</h4>
+                    <p>Complete activity history, policy tracking, and secure audit trails for institutional-grade operations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-band bg-white" id="audience">
+        <div class="container cta-inner fade-up">
+            <div class="cta-copy">
+                <h2>Request Access<br><span class="highlight-text">To The Terminal.</span></h2>
+                <p>Join the elite network of founders and investors moving capital through autonomous logistics.</p>
+                <ul class="checklist mt-4">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Real-Time AI Tracking</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Verified Investment Intent</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Global Meeting Infrastructure</li>
+                </ul>
+            </div>
+            
+            <div class="terminal-image tilt">
+                <img src="{{url_for('static', filename='images/growth.jpg')}}" alt="Growth chart and financial metrics dashboard">
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding bg-blue" id="security">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">SECURITY & COMPLIANCE</span>
+                <h2>Your Security is Our Responsibility</h2>
+            </div>
+            <div class="security-grid fade-up delay-100">
+                <div class="security-badge saas-card">End-to-end encryption (at rest and in transit)</div>
+                <div class="security-badge saas-card">Role-based access and granular permissions</div>
+                <div class="security-badge saas-card">Full audit logs and document tracking</div>
+                <div class="security-badge saas-card">Secure communication workflows</div>
+                <div class="security-badge saas-card">Governance-ready infrastructure</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding bg-white" id="faq">
+        <div class="container">
+            <div class="section-header center-text fade-up">
+                <span class="sub-label">FAQ</span>
+                <h2>Everything you need to know.</h2>
+            </div>
+            <div class="faq fade-up delay-100">
+                <div class="faq-item saas-card">
+                    <button class="faq-q">Do I need a pitch deck to start?</button>
+                    <div class="faq-a">You can upload a deck, financial metrics, or structured business information. SEIC’s AI organizes and enhances your presentation automatically.</div>
+                </div>
+                <div class="faq-item saas-card">
+                    <button class="faq-q">Is my data secure?</button>
+                    <div class="faq-a">Yes. All data is encrypted at rest and in transit with full access control and audit logging.</div>
+                </div>
+                <div class="faq-item saas-card">
+                    <button class="faq-q">Who sees my information?</button>
+                    <div class="faq-a">Only verified, matched investors with explicit access permission can view detailed data rooms.</div>
+                </div>
+                <div class="faq-item saas-card">
+                    <button class="faq-q">How does investor intent verification work?</button>
+                    <div class="faq-a">AI evaluates engagement depth, thesis alignment, and structured interaction before advancing conversations to meetings.</div>
+                </div>
+                <div class="faq-item saas-card">
+                    <button class="faq-q">How does SEIC make money?</button>
+                    <div class="faq-a">SEIC offers premium AI tools, visibility enhancements, and a success-based partnership fee when funding closes.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer" id="contact">
+        <div class="container">
+            <div class="footer-bottom">
+                <div class="logo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary)" style="margin-right: 4px; vertical-align: middle;">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    SEIC
+                </div>
+                <div class="copyright">
+                    &copy; 2026 CAPITAL LOGISTICS WORLDWIDE. ALL SYSTEMS ACTIVE.
+                </div>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+{% endblock %}
+
+{% block script %}
+    {{ super() }}
+    <script>
+        try {
+            // Enhanced scroll reveal with heavy ease-out cubic-bezier
+            const animated = document.querySelectorAll('.fade-up, .scale-in');
+            const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
+            
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, observerOptions);
+                animated.forEach(el => observer.observe(el));
+            } else {
+                animated.forEach(el => el.classList.add('visible'));
+            }
+
+            // Animated counters logic restored
+            document.querySelectorAll('.num').forEach(el => {
+                const target = parseInt(el.dataset.target || '0', 10);
+                let current = 0;
+                const step = Math.ceil(target / 40);
+                const inc = () => {
+                    current += step;
+                    if (current >= target) el.textContent = target;
+                    else { el.textContent = current; requestAnimationFrame(inc); }
+                };
+                
+                const numObserver = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            inc();
+                            obs.unobserve(entry.target);
+                        }
+                    })
+                });
+                numObserver.observe(el);
+            });
+
+            // FAQ toggles
+            document.querySelectorAll('.faq-item .faq-q').forEach(btn => {
+                btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
+            });
+
+            // Hamburger Menu
+            const hamburger = document.querySelector('.hamburger');
+            const mobileMenu = document.querySelector('.mobile-menu');
+            const body = document.body;
+            if (hamburger && mobileMenu) {
+                hamburger.addEventListener('click', () => {
+                    hamburger.classList.toggle('active');
+                    mobileMenu.classList.toggle('active');
+                    body.classList.toggle('menu-open');
+                });
+                document.querySelectorAll('.mobile-menu a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        hamburger.classList.remove('active');
+                        mobileMenu.classList.remove('active');
+                        body.classList.remove('menu-open');
+                    });
+                });
+            }
+
+            // Card tilt logic restored
+            const supportsTilt = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+            if (supportsTilt) {
+                document.querySelectorAll('.tilt').forEach(card => {
+                    let rect;
+                    const reset = () => { card.style.transform = ''; };
+                    card.addEventListener('mouseenter', () => { rect = card.getBoundingClientRect(); });
+                    card.addEventListener('mousemove', (e) => {
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        const rx = ((y / rect.height) - 0.5) * -6;
+                        const ry = ((x / rect.width) - 0.5) * 6;
+                        card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(6px)`;
+                    });
+                    card.addEventListener('mouseleave', reset);
+                });
+            }
+
+        } catch (e) {
+            document.querySelectorAll('.fade-up, .scale-in').forEach(el => el.classList.add('visible'));
+        }
+    </script>
+{% endblock %}

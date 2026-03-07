@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor Dashboard — EISC Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_dashboard.css') }}">
+</head>
+<body>
+
+{% set active_nav = 'home' %}
+{% include 'auth/investor/sidebar.html' %}
+
+<div class="main-wrap">
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+    <!-- ================================================================
+         TOP BAR
+    ================================================================ -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">Investor <span>Dashboard</span></div>
+            <div class="topbar-subtitle">Get matched with the right startups.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn sidebar-toggle-btn" id="sidebarToggleBtn" type="button" aria-label="Toggle Sidebar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!', 'default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_notifs and unread_notifs > 0 %}
+                <span class="topbar-notif-dot"></span>
+                {% endif %}
+            </button>
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!', 'default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41"/>
+                </svg>
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar" title="{{ profile.username if profile else '' }}">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ profile.username[0].upper() if profile and profile.username else 'I' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- ================================================================
+         PAGE CONTENT
+    ================================================================ -->
+    <div class="page-content">
+
+        <!-- ── Stat Cards Row ───────────────────────────────── -->
+        <div class="stats-row">
+
+            <!-- Profile Score -->
+            <div class="card stat-card anim anim-1">
+                <div class="stat-card-left">
+                    <div class="stat-card-label">Investor Profile Score</div>
+                    <div class="stat-card-sub teal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Highly Active
+                    </div>
+                </div>
+                <div class="stat-card-right">
+                    <div class="score-shield">
+                        <div class="score-shield-bg">
+                            <div class="score-shield-num">
+                                {% if profile and profile.profile_score and profile.profile_score > 0 %}
+                                    {{ profile.profile_score }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="stat-tag teal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Highly Active
+                    </span>
+                </div>
+            </div>
+
+            <!-- Entrepreneur Matches -->
+            <div class="card stat-card anim anim-2">
+                <div class="stat-card-left">
+                    <div class="stat-card-label">Entrepreneur Matches</div>
+                    <div class="stat-card-sub blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Available Opportunities
+                    </div>
+                </div>
+                <div class="stat-card-right">
+                    <div class="stat-card-value">{{ startup_match_count if startup_match_count is defined else '—' }}</div>
+                    <span class="stat-tag blue">Available</span>
+                </div>
+            </div>
+
+            <!-- Meetings Scheduled -->
+            <div class="card stat-card anim anim-3">
+                <div class="stat-card-left">
+                    <div class="stat-card-label">Meetings Scheduled</div>
+                    <div class="stat-card-sub amber">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Upcoming Meetings
+                    </div>
+                </div>
+                <div class="stat-card-right">
+                    <div class="stat-card-value">{{ meetings|length if meetings else '—' }}</div>
+                    <span class="stat-tag teal">Scheduled</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ── Stacked Sections ─────────────────────────── -->
+        <div class="dashboard-sections">
+
+                <!-- Entrepreneurs & Investors List -->
+                <div class="card anim anim-3" style="margin-bottom:18px;">
+                    <div class="card-header">
+                        <div class="card-title">Available Entrepreneurs & Investors</div>
+                        <div style="display:flex;gap:10px;align-items:center;">
+                            <button id="btn-all" style="background:#3b82f6; color:white; border-radius:5px; border: none; padding: 5px 12px; cursor:pointer; font-weight:500;" class="toggle-btn active" onclick="showAllList()">All</button>
+                            <button id="btn-investors" style="background:#6b7280; color:white; border-radius:5px; border: none; padding: 5px 12px; cursor:pointer; font-weight:500;" class="toggle-btn" onclick="showInvestorList()">Investors</button>
+                            <button id="btn-entrepreneurs" style="background:#6b7280; color:white; border-radius:5px; border: none; padding: 5px 12px; cursor:pointer; font-weight:500;" class="toggle-btn" onclick="showEntrepreneurList()">Entrepreneurs</button>
+                        </div>
+                    </div>
+
+                    <div class="entrepreneurs-list">
+                        <!-- All Entrepreneurs -->
+                        <div id="all-list-container">
+                            {% if matched_entrepreneurs %}
+                                {% for s in matched_entrepreneurs %}
+                                <div class="entrepreneur-row">
+                                    <!-- Avatar -->
+                                    <div class="entrepreneur-avatar">
+                                        {% if s.profile_image_url %}
+                                            <img src="{{ s.profile_image_url }}" alt="{{ s.startup_name }}">
+                                        {% else %}
+                                            <div class="entrepreneur-avatar-placeholder">
+                                                {{ s.startup_name[0].upper() if s.startup_name else 'E' }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div class="entrepreneur-info">
+                                        <div class="entrepreneur-name">{{ s.startup_name or s.username }}</div>
+                                        <div class="entrepreneur-meta">{{ s.industry or 'Startup' }}</div>
+                                        <div class="entrepreneur-tags">
+                                            {% if s.traction %}
+                                            <span class="entrepreneur-tag">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;">
+                                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                                    <polyline points="17 6 23 6 23 12"/>
+                                                </svg>
+                                                {{ s.traction[:40] }}
+                                            </span>
+                                            {% endif %}
+                                            {% if s.stage %}
+                                            <span class="entrepreneur-tag">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;">
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                </svg>
+                                                {{ s.stage }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Ask + Stage info -->
+                                    <div class="entrepreneur-ask-col">
+                                        {% if s.funding_required %}
+                                        <div class="entrepreneur-ask-amount">{{ s.funding_required }}</div>
+                                        <div class="entrepreneur-ask-label">{{ s.stage or 'Seeking' }}</div>
+                                        {% else %}
+                                        <div class="entrepreneur-ask-amount">—</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="entrepreneur-actions">
+                                        {% set status = s.connection_status if s.connection_status else 'none' %}
+                                        {% if status == 'accepted' %}
+                                            <button class="btn-start-chat"
+                                                    onclick="showToast('Opening chat...', 'default')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+                                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                                </svg>
+                                                Start Chat
+                                            </button>
+                                        {% elif status == 'pending' %}
+                                            <button class="btn-interested pending" disabled>
+                                                Pending…
+                                            </button>
+                                        {% else %}
+                                            <button class="btn-interested"
+                                                    onclick="expressInterest('{{ s.email }}', this)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                                </svg>
+                                                Interested
+                                            </button>
+                                        {% endif %}
+                                        <button class="btn-view-profile"
+                                                onclick="showToast('Profile coming soon!', 'default')">
+                                            View Profile
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div style="text-align:center;padding:20px;font-size:0.78rem;color:var(--text-muted);">
+                                    No entrepreneurs available yet.
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Investors Only -->
+                        <div id="investor-list-container" style="display:none;text-align:center;padding:20px;font-size:0.78rem;color:var(--text-muted);">
+                            No investor connections yet.
+                        </div>
+
+                        <!-- Entrepreneurs Only -->
+                        <div id="entrepreneur-list-container" style="display:none;">
+                            {% if matched_entrepreneurs %}
+                                {% for s in matched_entrepreneurs %}
+                                <div class="entrepreneur-row">
+                                    <!-- Avatar -->
+                                    <div class="entrepreneur-avatar">
+                                        {% if s.profile_image_url %}
+                                            <img src="{{ s.profile_image_url }}" alt="{{ s.startup_name }}">
+                                        {% else %}
+                                            <div class="entrepreneur-avatar-placeholder">
+                                                {{ s.startup_name[0].upper() if s.startup_name else 'E' }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div class="entrepreneur-info">
+                                        <div class="entrepreneur-name">{{ s.startup_name or s.username }}</div>
+                                        <div class="entrepreneur-meta">{{ s.industry or 'Startup' }}</div>
+                                        <div class="entrepreneur-tags">
+                                            {% if s.traction %}
+                                            <span class="entrepreneur-tag">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;">
+                                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                                    <polyline points="17 6 23 6 23 12"/>
+                                                </svg>
+                                                {{ s.traction[:40] }}
+                                            </span>
+                                            {% endif %}
+                                            {% if s.stage %}
+                                            <span class="entrepreneur-tag">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;">
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                </svg>
+                                                {{ s.stage }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Ask + Stage info -->
+                                    <div class="entrepreneur-ask-col">
+                                        {% if s.funding_required %}
+                                        <div class="entrepreneur-ask-amount">{{ s.funding_required }}</div>
+                                        <div class="entrepreneur-ask-label">{{ s.stage or 'Seeking' }}</div>
+                                        {% else %}
+                                        <div class="entrepreneur-ask-amount">—</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="entrepreneur-actions">
+                                        {% set status = s.connection_status if s.connection_status else 'none' %}
+                                        {% if status == 'accepted' %}
+                                            <button class="btn-start-chat"
+                                                    onclick="showToast('Opening chat...', 'default')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+                                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                                </svg>
+                                                Start Chat
+                                            </button>
+                                        {% elif status == 'pending' %}
+                                            <button class="btn-interested pending" disabled>
+                                                Pending…
+                                            </button>
+                                        {% else %}
+                                            <button class="btn-interested"
+                                                    onclick="expressInterest('{{ s.email }}', this)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                                </svg>
+                                                Interested
+                                            </button>
+                                        {% endif %}
+                                        <button class="btn-view-profile"
+                                                onclick="showToast('Profile coming soon!', 'default')">
+                                            View Profile
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div style="text-align:center;padding:20px;font-size:0.78rem;color:var(--text-muted);">
+                                    No entrepreneurs available yet.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deal Pipeline -->
+                <div class="card deal-tracker-card anim anim-4">
+                    <div class="card-header">
+                        <div class="card-title">Deal Pipeline</div>
+                        <a class="card-action-link" href="#" onclick="showToast('Full deal tracker coming soon!', 'default'); return false;">
+                            View All →
+                        </a>
+                    </div>
+                    <div class="deal-tracker-stages">
+
+                        {% set deal_stages = [
+                            {'key': 'introduced', 'label': 'Introduced', 'class': 'stage-introduced',
+                            'icon': '<circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/>',
+                            'count': deal_counts.introduced if deal_counts else 0},
+                            {'key': 'discussion', 'label': 'In Discussion', 'class': 'stage-discussion',
+                            'icon': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+                            'count': deal_counts.discussion if deal_counts else 0},
+                            {'key': 'diligence',  'label': 'Due Diligence','class': 'stage-diligence',
+                            'icon': '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+                            'count': deal_counts.diligence if deal_counts else 0},
+                            {'key': 'term_sheet', 'label': 'Term Sheet',   'class': 'stage-termsheet',
+                            'icon': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+                            'count': deal_counts.term_sheet if deal_counts else 0},
+                            {'key': 'closed',     'label': 'Closed',       'class': 'stage-closed',
+                            'icon': '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+                            'count': deal_counts.closed if deal_counts else 0},
+                        ] %}
+
+                        {% for stage in deal_stages %}
+                        <div class="deal-stage">
+                            <div class="deal-stage-pill {{ stage.class }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    {{ stage.icon | safe }}
+                                </svg>
+                                {{ stage.label }}
+                            </div>
+                            <div class="deal-stage-count">{{ stage.count }}</div>
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+
+                <!-- Upcoming Meetings -->
+                <div class="card anim anim-4">
+                    <div class="card-header">
+                        <div class="card-title">Upcoming Meetings</div>
+                        <a class="card-action-link" href="#"
+                           onclick="showToast('Calendar view coming soon!', 'default'); return false;">View all</a>
+                    </div>
+
+                    {% if meetings %}
+                        {% for mtg in meetings[:3] %}
+                        <div class="meeting-item">
+                            <div class="meeting-item-top">
+                                <div class="meeting-datetime">
+                                    {{ mtg.scheduled_at.strftime('%a, %d %b | %I:%M %p') if mtg.scheduled_at else 'TBD' }}
+                                </div>
+                                <div class="meeting-cal-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="meeting-desc">
+                                {{ mtg.meeting_type if mtg.meeting_type else 'Meeting' }} with
+                                <strong>{{ mtg.startup_name if mtg.startup_name else '—' }}</strong>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                    {% else %}
+                        <div style="text-align:center;padding:20px 18px;font-size:0.78rem;color:var(--text-muted);">
+                            No meetings scheduled yet. Start connecting with startups to schedule meetings.
+                        </div>
+                    {% endif %}
+
+                    <button class="manage-schedule-btn"
+                            onclick="showToast('Schedule manager coming soon!', 'default')">
+                        Manage Schedule
+                    </button>
+                </div>
+
+        </div><!-- /dashboard-sections -->
+
+    </div><!-- /page-content -->
+</div><!-- /main-wrap -->
+
+
+<!-- ================================================================
+     MODAL — EDIT PROFILE
+================================================================ -->
+<div class="modal-overlay" id="editProfileModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-header-title">Edit Investor Profile</div>
+            <button class="modal-close" data-close-modal="editProfileModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <form id="editProfileForm">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Firm Name</label>
+                        <input class="form-input" id="ep_firm_name" type="text"
+                               placeholder="e.g. Accel Partners"
+                               value="{{ profile.firm_name if profile and profile.firm_name else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Investment Focus</label>
+                        <input class="form-input" id="ep_investment_focus" type="text"
+                               placeholder="e.g. SaaS, FinTech, HealthTech"
+                               value="{{ profile.investment_focus if profile and profile.investment_focus else '' }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bio / Investment Thesis</label>
+                    <textarea class="form-textarea" id="ep_bio" placeholder="Describe your investment thesis…">{{ profile.bio if profile and profile.bio else '' }}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input class="form-input" id="ep_location" type="text"
+                               placeholder="e.g. Mumbai, India"
+                               value="{{ profile.location if profile and profile.location else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Website</label>
+                        <input class="form-input" id="ep_website" type="url"
+                               placeholder="https://yourfirm.com"
+                               value="{{ profile.website_url if profile and profile.website_url else '' }}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Min Ticket Size (₹)</label>
+                        <input class="form-input" id="ep_min_ticket" type="number"
+                               placeholder="e.g. 5000000"
+                               value="{{ profile.min_ticket_size if profile and profile.min_ticket_size else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Ticket Size (₹)</label>
+                        <input class="form-input" id="ep_max_ticket" type="number"
+                               placeholder="e.g. 50000000"
+                               value="{{ profile.max_ticket_size if profile and profile.max_ticket_size else '' }}">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-close-modal="editProfileModal">Cancel</button>
+                <button type="submit" class="btn-submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ================================================================
+     MODAL — PREMIUM UPGRADE
+================================================================ -->
+<div class="modal-overlay" id="premiumModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-header-title">⭐ Upgrade to Premium</div>
+            <button class="modal-close" data-close-modal="premiumModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="premium-header-banner">
+                <h2>Unlock Your Full Potential</h2>
+                <p>Get more startup visibility, AI-powered deal scoring, and priority deal flow.</p>
+            </div>
+            <div class="premium-plans">
+                <div class="plan-card">
+                    <div class="plan-name">Pro</div>
+                    <div class="plan-price">₹2,499 <span>/ month</span></div>
+                    <div class="plan-features">
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>50 startup matches/mo</div>
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>AI deal scoring</div>
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Priority deal flow</div>
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Analytics dashboard</div>
+                    </div>
+                </div>
+                <div class="plan-card featured">
+                    <div class="plan-featured-badge">MOST POPULAR</div>
+                    <div class="plan-name">Elite</div>
+                    <div class="plan-price">₹5,999 <span>/ month</span></div>
+                    <div class="plan-features">
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Unlimited matches</div>
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>AI due diligence reports</div>
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Featured investor badge</div>
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Dedicated advisor</div>
+                        <div class="plan-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Exclusive event invitations</div>
+                    </div>
+                </div>
+            </div>
+            <button class="premium-cta-btn"
+                    onclick="showToast('Payment integration coming soon!', 'default')">
+                ⭐ Get Started with Elite
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="{{ url_for('static', filename='js/investor/investor_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+
+<script>
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast ${type || 'default'}`;
+    const icons = {
+        success: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`,
+        error:   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>`,
+        default: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/></svg>`
+    };
+    t.innerHTML = (icons[type] || icons.default) + `<span>${msg}</span>`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => { t.classList.add('removing'); t.addEventListener('animationend', () => t.remove()); }, 3200);
+}
+
+function openModal(id)  { const el = document.getElementById(id); if(el) el.classList.add('open'); }
+function closeModal(id) { const el = document.getElementById(id); if(el) el.classList.remove('open'); }
+
+// Toggle functions for list filters
+function showAllList() {
+    document.getElementById('all-list-container').style.display = 'block';
+    document.getElementById('investor-list-container').style.display = 'none';
+    document.getElementById('entrepreneur-list-container').style.display = 'none';
+    
+    document.getElementById('btn-all').style.background = '#3b82f6';
+    document.getElementById('btn-investors').style.background = '#6b7280';
+    document.getElementById('btn-entrepreneurs').style.background = '#6b7280';
+}
+
+function showInvestorList() {
+    document.getElementById('all-list-container').style.display = 'none';
+    document.getElementById('investor-list-container').style.display = 'block';
+    document.getElementById('entrepreneur-list-container').style.display = 'none';
+    
+    document.getElementById('btn-all').style.background = '#6b7280';
+    document.getElementById('btn-investors').style.background = '#3b82f6';
+    document.getElementById('btn-entrepreneurs').style.background = '#6b7280';
+}
+
+function showEntrepreneurList() {
+    document.getElementById('all-list-container').style.display = 'none';
+    document.getElementById('investor-list-container').style.display = 'none';
+    document.getElementById('entrepreneur-list-container').style.display = 'block';
+    
+    document.getElementById('btn-all').style.background = '#6b7280';
+    document.getElementById('btn-investors').style.background = '#6b7280';
+    document.getElementById('btn-entrepreneurs').style.background = '#3b82f6';
+}
+
+function expressInterest(email, btn) {
+    showToast('Expressing interest...', 'default');
+    // Add API call here to express interest
+}
+</script>
+
+</body>
+</html>

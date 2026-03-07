@@ -1,0 +1,555 @@
+-- create database seic_db;
+use seic_db;
+
+
+-- ═════════════════════════════════════════════════════════════════════════════
+-- EISC DATABASE SCHEMA
+-- A complete, clean, and efficient schema for the EISC platform
+-- Run these commands in order in your MySQL client
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- CREATE DATABASE IF NOT EXISTS eisc_db;
+-- USE eisc_db;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 1. LOGIN_DATA
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS login_data (
+    id                  INT AUTO_INCREMENT UNIQUE,
+    email               VARCHAR(255) PRIMARY KEY,
+    username            VARCHAR(50) NOT NULL,
+    age                 TINYINT(3) NOT NULL,
+    role                VARCHAR(20) NOT NULL,
+    gender              VARCHAR(10) NOT NULL,
+    password            VARCHAR(255) NOT NULL,
+    otp                 VARCHAR(6) DEFAULT NULL,
+    otp_created_at      DATETIME DEFAULT NULL,
+    is_verified         TINYINT(1) DEFAULT 0,
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email),
+    INDEX idx_role (role)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 2. ENTREPRENEUR_PROFILE
+-- Extended profile for entrepreneurs
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS entrepreneur_profile (
+    email               VARCHAR(255) PRIMARY KEY,
+    startup_name        VARCHAR(150) NOT NULL,
+    bio                 TEXT,
+    industry            VARCHAR(100),
+    location            VARCHAR(100),
+    website_url         VARCHAR(255),
+    profile_image_url   VARCHAR(500),
+    linkedin_url        VARCHAR(255),
+    twitter_url         VARCHAR(255),
+    stage               VARCHAR(30),
+    founded_year        INT,
+    team_size           VARCHAR(30),
+    focus_areas         TEXT,
+    funding_amount      DECIMAL(15,2),
+    funding_currency    VARCHAR(10) DEFAULT 'INR',
+    funding_required    VARCHAR(50),
+    use_of_funds        TEXT,
+    funding_progress_pct INT DEFAULT 0,
+    profile_views       INT DEFAULT 0,
+    investors_connected INT DEFAULT 0,
+    total_pitches       INT DEFAULT 0,
+    profile_score       INT DEFAULT 0,
+    is_premium          TINYINT(1) DEFAULT 0,
+    is_verified_profile TINYINT(1) DEFAULT 0,
+    video_pitch_url     VARCHAR(500),
+    demo_url            VARCHAR(500),
+    pitch_deck_url      VARCHAR(500),
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ep_email FOREIGN KEY (email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_industry (industry),
+    INDEX idx_stage (stage),
+    INDEX idx_created (created_at DESC)
+);
+alter table entrepreneur_profile add column profile_score_breakdown JSON;
+alter table entrepreneur_profile add column profile_score_summary TEXT;
+alter table login_data add column authorized varchar(100);
+alter table entrepreneur_profile add column profile_score float4;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 3. PITCH_CONTENT
+-- Detailed pitch deck content for entrepreneurs
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS pitch_content (
+    pitch_id            INT AUTO_INCREMENT PRIMARY KEY,
+    email               VARCHAR(255) NOT NULL UNIQUE,
+    problem             TEXT,
+    solution            TEXT,
+    market              TEXT,
+    business_model      TEXT,
+    traction            TEXT,
+    team                TEXT,
+    financials          TEXT,
+    the_ask             TEXT,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pc_email FOREIGN KEY (email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_email (email)
+);
+alter table pitch_content add column video_pitch_url varchar(255);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 3.5. INVESTOR_PORTFOLIO_PROFILE
+-- Investor's portfolio profile & investment criteria (8 editable sections)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS investor_portfolio_profile (
+    email                   VARCHAR(255) PRIMARY KEY,
+    investment_thesis       TEXT,
+    deal_criteria           TEXT,
+    portfolio_highlights    TEXT,
+    sector_expertise        TEXT,
+    dd_framework            TEXT,
+    value_add               TEXT,
+    exit_strategy           TEXT,
+    co_investment           TEXT,
+    preferred_sectors       VARCHAR(255),
+    investment_stage        VARCHAR(100),
+    min_ticket_size         DECIMAL(15,2),
+    max_ticket_size         DECIMAL(15,2),
+    available_funds         DECIMAL(15,2) DEFAULT 0,
+    investment_utilization_pct    DECIMAL(5,2) DEFAULT 0,
+    created_at              DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at              DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ipp_email FOREIGN KEY (email)
+        REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_email (email)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 4. USER_POSTS
+-- Public posts/feed from entrepreneurs and investors
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_posts (
+    post_id             INT AUTO_INCREMENT PRIMARY KEY,
+    email               VARCHAR(255) NOT NULL,
+    title               VARCHAR(255) NOT NULL,
+    description         TEXT,
+    industry_tag        VARCHAR(100),
+    pitch_deck_url      VARCHAR(500),
+    video_url           VARCHAR(500),
+    thumbnail_url       VARCHAR(500),
+    likes_count         INT DEFAULT 0,
+    comments_count      INT DEFAULT 0,
+    saves_count         INT DEFAULT 0,
+    views_count         INT DEFAULT 0,
+    is_active           TINYINT(1) DEFAULT 1,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pp_email FOREIGN KEY (email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_email (email),
+    INDEX idx_created (created_at DESC),
+    INDEX idx_active (is_active)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 5. INVESTOR_PROFILES
+-- Extended profile for investors
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS investor_profiles (
+    email               VARCHAR(255) PRIMARY KEY,
+    full_name           VARCHAR(150),
+    firm_name           VARCHAR(150),
+    bio                 TEXT,
+    investment_focus    VARCHAR(255),
+    location            VARCHAR(100),
+    website_url         VARCHAR(255),
+    profile_image_url   VARCHAR(500),
+    linkedin_url        VARCHAR(255),
+    twitter_url         VARCHAR(255),
+    crunchbase_url      VARCHAR(255),
+    geography           VARCHAR(150),
+    investor_type       VARCHAR(80),
+    current_position    VARCHAR(150),
+    years_of_experience INT,
+    education           VARCHAR(200),
+    previous_roles      TEXT,
+    investor_rating     DECIMAL(3,1),
+    total_investments   INT DEFAULT 0,
+    startups_connected  INT DEFAULT 0,
+    profile_views       INT DEFAULT 0,
+    is_premium          TINYINT(1) DEFAULT 0,
+    is_verified_investor TINYINT(1) DEFAULT 0,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ip_email FOREIGN KEY (email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_geography (geography),
+    INDEX idx_investor_type (investor_type),
+    INDEX idx_created (created_at DESC)
+);
+alter table investor_portfolio_profile add column capital_deployed_pct decimal(6,4);
+alter table investor_profiles add column profile_score_breakdown JSON;
+alter table investor_profiles add column profile_score_summary TEXT;
+alter table investor_profiles add column  profile_score_confidence VARCHAR(20);
+alter table investor_profiles add column preferred_sectors varchar(255);
+alter table investor_profiles add column profile_score int2;
+alter table investor_profiles add column investment_stage varchar(255);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 13. INVESTOR_PORTFOLIO
+-- Tracks actual investments made by investors
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS investor_portfolio (
+    investment_id       INT AUTO_INCREMENT PRIMARY KEY,
+    investor_email      VARCHAR(255) NOT NULL,
+    startup_name        VARCHAR(255) NOT NULL,
+    entrepreneur_email  VARCHAR(255),
+    investment_amount   DECIMAL(15,2) NOT NULL,
+    equity_percentage   DECIMAL(5,2),
+    investment_date     DATE NOT NULL,
+    investment_stage    VARCHAR(100),
+    sector              VARCHAR(100),
+    status              ENUM('active','exited','written_off') DEFAULT 'active',
+    notes               TEXT,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ip_investor FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_ip_entrepreneur FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE SET NULL,
+    INDEX idx_investor (investor_email, investment_date DESC),
+    INDEX idx_status (investor_email, status)
+);
+
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 6. POST_INTERACTIONS
+-- Tracks likes, saves, and views on pitch posts
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS post_interactions (
+    interaction_id      INT AUTO_INCREMENT PRIMARY KEY,
+    user_email          VARCHAR(255) NOT NULL,
+    post_id             INT NOT NULL,
+    interaction_type    ENUM('like','save','interested','view') NOT NULL,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_interaction (user_email, post_id, interaction_type),
+    CONSTRAINT fk_pi_user FOREIGN KEY (user_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_pi_post FOREIGN KEY (post_id) REFERENCES user_posts(post_id) ON DELETE CASCADE,
+    INDEX idx_user_email (user_email),
+    INDEX idx_post_id (post_id)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 7. POST_COMMENTS
+-- Comments on pitch posts
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS post_comments (
+    comment_id          INT AUTO_INCREMENT PRIMARY KEY,
+    post_id             INT NOT NULL,
+    email               VARCHAR(255) NOT NULL,
+    comment_text        TEXT NOT NULL,
+    parent_comment_id   INT DEFAULT NULL,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pcm_post FOREIGN KEY (post_id) REFERENCES user_posts(post_id) ON DELETE CASCADE,
+    CONSTRAINT fk_pcm_email FOREIGN KEY (email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_pcm_parent FOREIGN KEY (parent_comment_id) REFERENCES post_comments(comment_id) ON DELETE SET NULL,
+    INDEX idx_post_id (post_id),
+    INDEX idx_email (email),
+    INDEX idx_parent (parent_comment_id)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 8. SAVED_INVESTORS
+-- Entrepreneurs' saved investors list
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS saved_investors (
+    save_id             INT AUTO_INCREMENT PRIMARY KEY,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    investor_email      VARCHAR(255) NOT NULL,
+    saved_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_saved_investor (entrepreneur_email, investor_email),
+    CONSTRAINT fk_si_ent FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_si_inv FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_entrepreneur (entrepreneur_email, saved_at DESC),
+    INDEX idx_investor (investor_email)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 9. SAVED_STARTUPS
+-- Investors' saved startups list
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS saved_startups (
+    save_id             INT AUTO_INCREMENT PRIMARY KEY,
+    investor_email      VARCHAR(255) NOT NULL,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    notes               TEXT,
+    saved_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_saved_startup (investor_email, entrepreneur_email),
+    CONSTRAINT fk_ss_inv FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_ss_ent FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_investor (investor_email, saved_at DESC),
+    INDEX idx_entrepreneur (entrepreneur_email)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 10. SAVED_POSTS
+-- Users' saved pitch posts
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS saved_posts (
+    save_id             INT AUTO_INCREMENT PRIMARY KEY,
+    user_email          VARCHAR(255) NOT NULL,
+    post_id             INT NOT NULL,
+    saved_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_saved_post (user_email, post_id),
+    CONSTRAINT fk_sp_user FOREIGN KEY (user_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_sp_post FOREIGN KEY (post_id) REFERENCES user_posts(post_id) ON DELETE CASCADE,
+    INDEX idx_user (user_email, saved_at DESC),
+    INDEX idx_post (post_id)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 11. CONNECTIONS
+-- Entrepreneur ↔ Investor connection requests
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS connections (
+    connection_id       INT AUTO_INCREMENT PRIMARY KEY,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    investor_email      VARCHAR(255) NOT NULL,
+    status              ENUM('pending','accepted','rejected','withdrawn') DEFAULT 'pending',
+    requested_by        VARCHAR(255) NOT NULL,
+    message             TEXT,
+    requested_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
+    responded_at        DATETIME,
+    UNIQUE KEY uq_connection (entrepreneur_email, investor_email),
+    CONSTRAINT fk_conn_ent FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_conn_inv FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_entrepreneur (entrepreneur_email, status),
+    INDEX idx_investor (investor_email, status),
+    INDEX idx_status (status)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 12. INVESTOR_INTERESTS
+-- Tracks when investors express interest in entrepreneurs
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS investor_interests (
+    interest_id         INT AUTO_INCREMENT PRIMARY KEY,
+    investor_email      VARCHAR(255) NOT NULL,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    status              ENUM('pending','accepted','rejected','withdrawn') DEFAULT 'pending',
+    message             TEXT,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_interest (investor_email, entrepreneur_email),
+    CONSTRAINT fk_ii_investor FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_ii_entrepreneur FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_investor (investor_email, status, created_at DESC),
+    INDEX idx_entrepreneur (entrepreneur_email, status, created_at DESC)
+);
+
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 14. MESSAGES
+-- Direct messages between users
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS messages (
+    message_id          INT AUTO_INCREMENT PRIMARY KEY,
+    sender_email        VARCHAR(255) NOT NULL,
+    receiver_email      VARCHAR(255) NOT NULL,
+    message_text        TEXT NOT NULL,
+    is_read             TINYINT(1) DEFAULT 0,
+    sent_at             DATETIME DEFAULT CURRENT_TIMESTAMP,
+    read_at             DATETIME,
+    CONSTRAINT fk_msg_sender FOREIGN KEY (sender_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_msg_receiver FOREIGN KEY (receiver_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_receiver (receiver_email, sent_at DESC),
+    INDEX idx_sender (sender_email, sent_at DESC),
+    INDEX idx_unread (receiver_email, is_read)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 15. NOTIFICATIONS
+-- In-platform notifications for users
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notifications (
+    notification_id     INT AUTO_INCREMENT PRIMARY KEY,
+    email               VARCHAR(255) NOT NULL,
+    type                ENUM(
+        'connection_request',
+        'connection_accepted',
+        'post_liked',
+        'post_commented',
+        'post_saved',
+        'investor_interested',
+        'new_message',
+        'profile_viewed',
+        'system'
+    ) NOT NULL,
+    title               VARCHAR(255),
+    body                TEXT,
+    related_post_id     INT DEFAULT NULL,
+    related_user_email  VARCHAR(255) DEFAULT NULL,
+    is_read             TINYINT(1) DEFAULT 0,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notif_email FOREIGN KEY (email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_email (email, created_at DESC),
+    INDEX idx_unread (email, is_read)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 16. PROFILE_VIEW_LOGS
+-- Logs who viewed whose profile
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS profile_view_logs (
+    log_id              INT AUTO_INCREMENT PRIMARY KEY,
+    viewed_email        VARCHAR(255) NOT NULL,
+    viewer_email        VARCHAR(255),
+    viewed_at           DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pvl_viewed FOREIGN KEY (viewed_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_viewed (viewed_email, viewed_at DESC)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 17. AI_CHAT_SESSIONS (Entrepreneur AI Chat)
+-- AI chat sessions for entrepreneurs
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_chat_sessions (
+    session_id          VARCHAR(64) PRIMARY KEY,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    mode                ENUM('guidance','intermediary') NOT NULL DEFAULT 'guidance',
+    investor_email      VARCHAR(255) DEFAULT NULL,
+    title               VARCHAR(200) DEFAULT 'New Chat',
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_acs_ent FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_acs_inv FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE SET NULL,
+    INDEX idx_ent_email (entrepreneur_email),
+    INDEX idx_updated (updated_at DESC)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 18. AI_CHAT_MESSAGES (Entrepreneur AI Chat)
+-- AI chat messages for entrepreneurs
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_chat_messages (
+    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id          VARCHAR(64) NOT NULL,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    mode                ENUM('guidance','intermediary') NOT NULL,
+    role                ENUM('user','assistant') NOT NULL,
+    content             TEXT NOT NULL,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_acm_session FOREIGN KEY (session_id) REFERENCES ai_chat_sessions(session_id) ON DELETE CASCADE,
+    CONSTRAINT fk_acm_ent FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_session (session_id),
+    INDEX idx_ent_email (entrepreneur_email),
+    INDEX idx_created (created_at DESC)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 19. INV_CHAT_SESSIONS (Investor AI Chat)
+-- AI chat sessions for investors
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS inv_chat_sessions (
+    session_id          VARCHAR(64) PRIMARY KEY,
+    investor_email      VARCHAR(255) NOT NULL,
+    mode                ENUM('guidance','intermediate') NOT NULL DEFAULT 'guidance',
+    entrepreneur_email  VARCHAR(255) DEFAULT NULL,
+    title               VARCHAR(200) DEFAULT 'New Chat',
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ics_inv FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_ics_ent FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE SET NULL,
+    INDEX idx_inv_email (investor_email),
+    INDEX idx_updated (updated_at DESC)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 20. INV_CHAT_MESSAGES (Investor AI Chat)
+-- AI chat messages for investors
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS inv_chat_messages (
+    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id          VARCHAR(64) NOT NULL,
+    investor_email      VARCHAR(255) NOT NULL,
+    mode                ENUM('guidance','intermediate') NOT NULL,
+    role                ENUM('user','assistant') NOT NULL,
+    content             TEXT NOT NULL,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_icm_session FOREIGN KEY (session_id) REFERENCES inv_chat_sessions(session_id) ON DELETE CASCADE,
+    CONSTRAINT fk_icm_inv FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_session (session_id),
+    INDEX idx_inv_email (investor_email),
+    INDEX idx_created (created_at DESC)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 21. MEETINGS
+-- Meeting records between investors and entrepreneurs
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS meetings (
+    meeting_id          INT AUTO_INCREMENT PRIMARY KEY,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    investor_email      VARCHAR(255) NOT NULL,
+    meeting_type        VARCHAR(100),
+    scheduled_at        DATETIME,
+    status              ENUM('scheduled','completed','cancelled') DEFAULT 'scheduled',
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_meet_ent FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_meet_inv FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_entrepreneur (entrepreneur_email, scheduled_at),
+    INDEX idx_investor (investor_email, scheduled_at),
+    INDEX idx_status (status)
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 22. DEALS
+-- Deal pipeline records
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS deals (
+    deal_id             INT AUTO_INCREMENT PRIMARY KEY,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    investor_email      VARCHAR(255) NOT NULL,
+    deal_stage          ENUM('introduced','in_discussion','due_diligence','term_sheet','closed') DEFAULT 'introduced',
+    deal_value          DECIMAL(15,2),
+    equity_offered      DECIMAL(5,2),
+    notes               TEXT,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_deal_ent FOREIGN KEY (entrepreneur_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_deal_inv FOREIGN KEY (investor_email) REFERENCES login_data(email) ON DELETE CASCADE,
+    UNIQUE KEY uq_deal (entrepreneur_email, investor_email),
+    INDEX idx_entrepreneur (entrepreneur_email, deal_stage),
+    INDEX idx_investor (investor_email, deal_stage),
+    INDEX idx_stage (deal_stage)
+);
+
+
+
+-- 1. Store pre-computed embeddings for every user
+--    Updated every time entrepreneur saves pitch or investor saves portfolio
+CREATE TABLE IF NOT EXISTS user_embeddings (
+    email        VARCHAR(255) PRIMARY KEY,
+    role         ENUM('entrepreneur','investor') NOT NULL,
+    embedding    MEDIUMTEXT NOT NULL,   -- JSON array, ~384 floats ≈ 7 KB
+    updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ue_email FOREIGN KEY (email)
+        REFERENCES login_data(email) ON DELETE CASCADE,
+    INDEX idx_role (role)
+);
+
+-- 2. Cache of top-N match scores (avoids recomputing on every page load)
+--    Direction: 'investor_to_entrepreneur' | 'entrepreneur_to_investor'
+CREATE TABLE IF NOT EXISTS ai_match_cache (
+    cache_id            INT AUTO_INCREMENT PRIMARY KEY,
+    investor_email      VARCHAR(255) NOT NULL,
+    entrepreneur_email  VARCHAR(255) NOT NULL,
+    score               DECIMAL(6,4) NOT NULL,
+    direction           ENUM('investor_to_entrepreneur','entrepreneur_to_investor') NOT NULL,
+    computed_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_match  (investor_email, entrepreneur_email, direction),
+    INDEX idx_inv_dir    (investor_email,    direction, score DESC),
+    INDEX idx_ent_dir    (entrepreneur_email, direction, score DESC),
+    CONSTRAINT fk_amc_inv FOREIGN KEY (investor_email)
+        REFERENCES login_data(email) ON DELETE CASCADE,
+    CONSTRAINT fk_amc_ent FOREIGN KEY (entrepreneur_email)
+        REFERENCES login_data(email) ON DELETE CASCADE
+);

@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block title %}Enterpreneur Dashboard - SEIC{% endblock %}
+
+{% block style %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/entrepreneur_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/entrepreneur_chat.css') }}">
+{% endblock %}
+
+{% block content %}
+    {{super()}}
+    {% set active_nav = 'ai' %}
+    {% include 'auth/entrepreneur/sidebar.html' %}
+
+    <div class="main-wrap">
+
+        <!-- TOP BAR — identical pattern to pitch deck -->
+        <header class="topbar">
+            <div class="topbar-titles">
+                <div class="topbar-page-title">AI <span>Chat</span></div>
+                <div class="topbar-subtitle">Get pitch guidance or let AI mediate your investor conversations.</div>
+            </div>
+            <div class="topbar-actions">
+                <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!','default')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </button>
+                <div class="topbar-divider"></div>
+                <div class="topbar-avatar" title="{{ profile.username if profile else '' }}">
+                    {% if profile and profile.profile_image_url %}
+                        <img src="{{ profile.profile_image_url }}" alt="">
+                    {% else %}
+                        {{ profile.username[0].upper() if profile and profile.username else 'U' }}
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <!-- PAGE CONTENT -->
+        <div class="page-content chat-page-content">
+            <div class="chat-root">
+
+                <!-- ══ LEFT PANEL — session history ══ -->
+                <aside class="chat-sidebar">
+                    <div class="chat-sidebar-header">
+                        <span style="font-size:18px;">🤖</span>
+                        <h2>AI Chat</h2>
+                        <button class="new-chat-btn" onclick="startNewChat()">+ New</button>
+                    </div>
+
+                    <div class="mode-tabs">
+                        <button class="mode-tab active" id="tab-guidance"
+                                onclick="switchSidebarTab('guidance')">🧠 Guidance</button>
+                        <button class="mode-tab" id="tab-intermediary"
+                                onclick="switchSidebarTab('intermediary')">🔵 Investor</button>
+                    </div>
+
+                    <div class="session-list" id="session-list">
+                        <div class="sessions-empty">Start a new chat ↗</div>
+                    </div>
+                </aside>
+
+                <!-- ══ MAIN CHAT AREA ══ -->
+                <main class="chat-main">
+
+                    <div class="chat-topbar">
+                        <div class="chat-mode-badge" id="mode-badge">
+                            <span class="dot"></span>
+                            <span id="mode-badge-text">Guidance Mode</span>
+                        </div>
+                        <span class="chat-topbar-title" id="topbar-title">AI Advisor</span>
+                        <span class="chat-topbar-sub">
+                            {{ profile.startup_name or profile.username or 'Entrepreneur' }}
+                        </span>
+                    </div>
+
+                    <div class="messages-area" id="messages-area">
+                        <div class="welcome-state" id="welcome-state">
+                            <div class="welcome-icon">🤖</div>
+                            <h3>Your AI Startup Advisor</h3>
+                            <p>Ask for pitch feedback, funding strategy, investor prep — or select an investor to let AI mediate your outreach.</p>
+                            <div class="quick-prompts" id="quick-prompts">
+                                <button class="quick-chip" onclick="useQuickPrompt(this)">Review my pitch deck</button>
+                                <button class="quick-chip" onclick="useQuickPrompt(this)">What investors should I target?</button>
+                                <button class="quick-chip" onclick="useQuickPrompt(this)">How do I improve my traction story?</button>
+                                <button class="quick-chip" onclick="useQuickPrompt(this)">Prepare me for due diligence</button>
+                                <button class="quick-chip" onclick="useQuickPrompt(this)">What's a realistic valuation for my stage?</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-bar">
+                        <div class="input-wrapper">
+                            <div style="position:relative;">
+                                <button class="plus-btn" id="plus-btn" onclick="toggleModePopup(event)">＋</button>
+
+                                <div class="mode-popup" id="mode-popup">
+                                    <div class="popup-section-label">Chat Mode</div>
+
+                                    <button class="popup-option active-mode" id="opt-guidance"
+                                            onclick="selectMode('guidance')">
+                                        <div class="popup-option-icon">🧠</div>
+                                        <div class="popup-option-text">
+                                            <strong>Guidance Mode</strong>
+                                            <span>AI advisor for pitch, strategy &amp; fundraising</span>
+                                        </div>
+                                    </button>
+
+                                    <div class="popup-divider"></div>
+                                    <div class="popup-section-label">Investor Intermediary</div>
+
+                                    {% if saved_investors %}
+                                        <div class="investor-list-scroll">
+                                            {% for inv in saved_investors %}
+                                            <button class="investor-option"
+                                                    onclick="selectInvestor('{{ inv.investor_email }}', '{{ inv.investor_name or inv.firm_name or inv.investor_email }}', this)">
+                                                <div class="inv-avatar">
+                                                    {% if inv.profile_image_url %}
+                                                        <img src="{{ inv.profile_image_url }}" alt="">
+                                                    {% else %}
+                                                        {{ (inv.investor_name or inv.firm_name or 'I')[0].upper() }}
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <div class="inv-name">{{ inv.investor_name or inv.firm_name or inv.investor_email }}</div>
+                                                    <div class="inv-firm">{{ inv.firm_name or inv.investment_focus or 'Investor' }}</div>
+                                                </div>
+                                            </button>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="no-investors-hint">
+                                            No interested investors yet.<br>Connect with investors to use this mode.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <textarea id="chat-textarea"
+                                    placeholder="Ask your AI advisor anything…"
+                                    rows="1"
+                                    onkeydown="handleKey(event)"
+                                    oninput="autoResize(this)"></textarea>
+
+                            <button class="send-btn" id="send-btn" onclick="sendMessage()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"/>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="input-hint">AI may make mistakes. Verify important decisions independently.</div>
+                    </div>
+
+                </main>
+            </div><!-- /chat-root -->
+        </div><!-- /page-content -->
+    </div><!-- /main-wrap -->
+
+
+    <!-- Premium Modal -->
+    <div class="modal-overlay" id="premiumModal">
+        <div class="modal" style="width:520px">
+            <div class="modal-header">
+                <div class="modal-header-title">⭐ Upgrade to Premium</div>
+                <button class="modal-close" data-close-modal="premiumModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align:center;padding-bottom:18px">
+                    <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#f59e0b,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Unlock Your Full Potential</h2>
+                </div>
+                <button onclick="showToast('Payment coming soon!','default')" style="display:block;width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:var(--r-md);font-size:0.9rem;font-weight:700;cursor:pointer">⭐ Get Started</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+{% endblock %}
+
+
+{% block script %}
+
+    {{super()}}
+
+    <script>
+        const PROFILE_IMAGE = "{{ profile.profile_image_url or '' }}";
+        const USERNAME      = "{{ profile.username or '' }}";
+    </script>
+
+    <script src="{{ url_for('static', filename='js/entrepreneur_dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/entrepreneur_chat.js') }}"></script>
+
+{% endblock %}

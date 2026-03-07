@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Startup Matches — EISC Investor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/matches.css') }}">
+</head>
+<body>
+
+{% set active_nav = 'matches' %}
+{% include 'auth/investor/sidebar.html' %}
+
+<div class="main-wrap">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">Startup <span>Matches</span></div>
+            <div class="topbar-subtitle">AI-ranked startups aligned with your investment thesis and stage preference.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!','default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_notifs and unread_notifs > 0 %}<span class="topbar-notif-dot"></span>{% endif %}
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="page-content">
+
+        <!-- Header strip -->
+        <div class="match-header-strip anim anim-1">
+            <div class="match-header-left">
+                <div class="match-header-icon">🤖</div>
+                <div>
+                    <div class="match-header-title">
+                        {{ matches|length }} AI-Matched Startup{{ 's' if matches|length != 1 }}
+                    </div>
+                    <div class="match-header-sub">
+                        Ranked by semantic similarity to your investment thesis + stage + ticket size.
+                        {% if matches %}
+                        Last computed {{ matches[0].computed_at.strftime('%d %b %Y, %H:%M') if matches[0].computed_at else 'recently' }}.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="match-header-actions">
+                <!-- Algorithm explainer -->
+                <button class="match-algo-btn" onclick="toggleAlgoPanel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    How it works
+                </button>
+                <button class="match-refresh-btn" id="refreshBtn" onclick="recomputeMatches()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Refresh Matches
+                </button>
+            </div>
+        </div>
+
+        <!-- Algorithm explainer panel (collapsible) -->
+        <div class="algo-panel" id="algoPanel">
+            <div class="algo-panel-inner">
+                <div class="algo-panel-title">🧠 How AI Matching Works</div>
+                <div class="algo-steps">
+                    <div class="algo-step">
+                        <div class="algo-step-num">1</div>
+                        <div><strong>Semantic Embedding (60%)</strong> — Your investment thesis, sector expertise, and portfolio profile are converted into a 384-dimensional vector using <code>all-MiniLM-L6-v2</code>. Each startup's pitch deck is embedded the same way. Cosine similarity measures conceptual alignment.</div>
+                    </div>
+                    <div class="algo-step">
+                        <div class="algo-step-num">2</div>
+                        <div><strong>Stage Alignment (20%)</strong> — Exact stage match scores 1.0, adjacent stage (e.g. Seed vs Pre-Seed) scores 0.6, distant stages score 0.</div>
+                    </div>
+                    <div class="algo-step">
+                        <div class="algo-step-num">3</div>
+                        <div><strong>Funding Fit (10%)</strong> — Startup's funding ask vs your min–max ticket range. Within range = 1.0, within 2× = 0.5, out of range = 0.</div>
+                    </div>
+                    <div class="algo-step">
+                        <div class="algo-step-num">4</div>
+                        <div><strong>Engagement Signal (10%)</strong> — Normalised profile views act as a traction proxy. High-traction startups get a mild boost.</div>
+                    </div>
+                </div>
+                <div class="algo-note">Matches are cached and auto-refresh every 24h, or when you update your investment profile.</div>
+            </div>
+        </div>
+
+        {% if not has_embedding %}
+        <!-- No embedding → profile incomplete -->
+        <div class="match-empty-state anim anim-2">
+            <div class="match-empty-icon">🔍</div>
+            <div class="match-empty-title">Complete Your Investment Profile First</div>
+            <p class="match-empty-sub">
+                To generate AI matches, we need to understand your investment thesis.
+                Fill in your <strong>Portfolio Builder</strong> (Investment Thesis, Deal Criteria, Sector Expertise)
+                and save — matches will generate automatically.
+            </p>
+            <a href="{{ url_for('investor_portfolio_auth.investor_portfolio_page') }}" class="match-cta-btn">
+                Build Your Investment Profile →
+            </a>
+        </div>
+
+        {% elif not matches %}
+        <!-- Has profile but no strong matches -->
+        <div class="match-empty-state anim anim-2">
+            <div class="match-empty-icon">🤷</div>
+            <div class="match-empty-title">No Strong Matches Yet</div>
+            <p class="match-empty-sub">
+                We only display startups scoring 60% or higher against your thesis.
+                Try broadening your stage or sector preferences, or check back as more founders join the platform.
+            </p>
+            <button class="match-cta-btn" onclick="recomputeMatches()">Refresh Now</button>
+        </div>
+
+        {% else %}
+
+        <!-- Score legend -->
+        <div class="score-legend anim anim-1">
+            <span class="legend-label">Match strength:</span>
+            <span class="legend-chip" style="background:#d1fae5;color:#065f46">80%+ Excellent</span>
+            <span class="legend-chip" style="background:#dbeafe;color:#1e40af">65%+ Strong</span>
+            <span class="legend-chip" style="background:#fef3c7;color:#92400e">50%+ Good</span>
+            <span class="legend-chip" style="background:#f3f4f6;color:#6b7280">40%+ Moderate</span>
+        </div>
+
+        <!-- Match cards grid -->
+        <div class="matches-grid">
+
+            {% for match in matches %}
+            {% set sm = match.score_meta %}
+            <div class="match-card anim anim-{{ loop.index % 4 + 1 }}">
+
+                <!-- header link -->
+                <div class="match-card-header-link">
+                    <a href="{{ url_for('entrepreneur_profile_auth.entrepreneur_profile', entrepreneur_email=match.entrepreneur_email) }}" title="View startup profile" style="display:block;color:inherit;text-decoration:none;">
+                </div>
+
+                <!-- Score badge -->
+                <div class="match-score-badge" style="background:{{ sm.color }}22;color:{{ sm.color }};border-color:{{ sm.color }}44">
+                    <div class="match-score-num" style="color:{{ sm.color }}">{{ sm.pct }}%</div>
+                    <div class="match-score-label">{{ sm.label }}</div>
+                </div>
+
+                <!-- Score bar -->
+                <div class="match-score-bar-wrap">
+                    <div class="match-score-bar"
+                         style="width:{{ sm.pct }}%;background:{{ sm.color }}"></div>
+                </div>
+
+                <!-- Avatar + identity -->
+                <div class="match-card-header">
+                    <div class="match-avatar">
+                        {% if match.profile_image_url %}
+                            <img src="{{ match.profile_image_url }}" alt="">
+                        {% else %}
+                            {{ (match.startup_name or match.username or 'S')[0].upper() }}
+                        {% endif %}
+                    </div>
+                    <div class="match-identity">
+                        <div class="match-startup-name">
+                            {{ match.startup_name or match.username or 'Unnamed Startup' }}
+                            {% if match.is_verified_profile %}
+                            <span class="match-verified-badge" title="Verified">✓</span>
+                            {% endif %}
+                        </div>
+                        <div class="match-founder-name">by {{ match.username }}</div>
+                    </div>
+                </div>
+
+                <!-- Tags row -->
+                </a></div>
+                <div class="match-tags">
+                    {% if match.industry %}
+                    <span class="match-tag tag-industry">{{ match.industry }}</span>
+                    {% endif %}
+                    {% if match.stage %}
+                    <span class="match-tag tag-stage">{{ match.stage }}</span>
+                    {% endif %}
+                    {% if match.location %}
+                    <span class="match-tag tag-location">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        {{ match.location }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Funding ask -->
+                {% if match.funding_required or match.funding_amount %}
+                <div class="match-funding">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    Seeking:
+                    <strong>
+                        {{ match.funding_required or
+                           (match.funding_currency + ' ' + '{:,.0f}'.format(match.funding_amount) if match.funding_amount else 'Ask not disclosed') }}
+                    </strong>
+                </div>
+                {% endif %}
+
+                <!-- Micro stats -->
+                <div class="match-micro-stats">
+                    {% if match.team_size %}
+                    <span>👥 {{ match.team_size }}</span>
+                    {% endif %}
+                    {% if match.founded_year %}
+                    <span>📅 Founded {{ match.founded_year }}</span>
+                    {% endif %}
+                    {% if match.profile_views %}
+                    <span>👁 {{ match.profile_views }} views</span>
+                    {% endif %}
+                </div>
+
+                <!-- Bio snippet -->
+                {% if match.bio %}
+                <p class="match-bio">{{ match.bio[:160] }}{{ '…' if match.bio|length > 160 }}</p>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="match-actions">
+                    <button class="match-btn-interest"
+                            id="interest-btn-{{ loop.index }}"
+                            onclick="expressInterest('{{ match.entrepreneur_email }}', {{ loop.index }})">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        Show Interest
+                    </button>
+                    <button class="match-btn-invest"
+                            onclick="openInvestModal('{{ match.entrepreneur_email }}', '{{ match.startup_name }}')"
+                            title="Send investment proposal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"/>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                        Invest
+                    </button>
+                    <button class="match-btn-save"
+                            onclick="saveStartup('{{ match.entrepreneur_email }}', this)"
+                            title="Save startup">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div><!-- /matches-grid -->
+        {% endif %}
+
+    </div><!-- /page-content -->
+</div><!-- /main-wrap -->
+
+
+<!-- Premium Modal -->
+<div class="modal-overlay" id="premiumModal">
+    <div class="modal" style="width:500px">
+        <div class="modal-header"><div class="modal-header-title">⭐ Upgrade to Premium</div>
+            <button class="modal-close" data-close-modal="premiumModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body" style="text-align:center;padding:24px">
+            <button onclick="showToast('Coming soon!','default')"
+                    style="display:block;width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:var(--r-md);font-size:0.9rem;font-weight:700;cursor:pointer">⭐ Get Started</button>
+        </div>
+    </div>
+</div>
+
+<!-- Investment Proposal Modal -->
+<div class="modal-overlay" id="investModal">
+    <div class="modal" style="width:600px">
+        <div class="modal-header">
+            <div class="modal-header-title">💰 Investment Proposal</div>
+            <button class="modal-close" data-close-modal="investModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:24px">
+            <div style="margin-bottom:16px">
+                <label style="display:block;font-weight:600;margin-bottom:4px">Startup</label>
+                <div id="investStartupName" style="color:#666;font-size:0.9rem">—</div>
+            </div>
+            <div style="margin-bottom:16px">
+                <label for="investAmount" style="display:block;font-weight:600;margin-bottom:4px">Investment Amount (₹)</label>
+                <input type="number" id="investAmount" placeholder="e.g. 50,00,000" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:0.9rem" min="0">
+            </div>
+            <div style="margin-bottom:16px">
+                <label for="investEquity" style="display:block;font-weight:600;margin-bottom:4px">Equity % (Optional)</label>
+                <input type="number" id="investEquity" placeholder="e.g. 5" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:0.9rem" min="0" max="100" step="0.1">
+            </div>
+            <div style="margin-bottom:16px">
+                <label for="investNotes" style="display:block;font-weight:600;margin-bottom:4px">Notes / Terms (Optional)</label>
+                <textarea id="investNotes" placeholder="e.g. Convertible instrument, conditions, etc." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:0.9rem;resize:vertical;min-height:80px"></textarea>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button onclick="submitInvestment()" style="flex:1;padding:10px;background:#4f46e5;color:#fff;border:none;border-radius:4px;font-weight:600;cursor:pointer">Send Proposal</button>
+                <button onclick="closeModal('investModal')" style="flex:1;padding:10px;background:#f3f4f6;color:#333;border:none;border-radius:4px;font-weight:600;cursor:pointer">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script>
+    const MATCH_RECOMPUTE_URL = "{{ url_for('match_auth.recompute_matches') }}";
+</script>
+<script src="{{ url_for('static', filename='js/investor/investor_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/matches.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+</body>
+</html>

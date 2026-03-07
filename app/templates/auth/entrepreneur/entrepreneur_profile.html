@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if is_self %}My Profile{% else %}Entrepreneur Profile{% endif %} — EISC Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/entrepreneur_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/entrepreneur_profile.css') }}">
+</head>
+<body>
+
+{% set active_nav = 'profile' %}
+{% include 'auth/entrepreneur/sidebar.html' %}
+
+<div class="main-wrap">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">{% if is_self %}My{% else %}Entrepreneur{% endif %} <span>Profile</span></div>
+            <div class="topbar-subtitle">How investors see you — keep it sharp and compelling.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!', 'default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_notifs and unread_notifs > 0 %}<span class="topbar-notif-dot"></span>{% endif %}
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar" title="{{ profile.username if profile else '' }}">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ profile.username[0].upper() if profile and profile.username else 'U' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+        <div class="profile-page-wrap">
+
+            <!-- Investor view banner -->
+            <div class="investor-view-banner anim anim-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span>
+                    <strong>Investor View</strong> — This is exactly how your profile appears to investors browsing the platform.
+                    A strong profile gets 3x more connection requests.
+                </span>
+            </div>
+
+            <!-- ── Hero Card ──────────────────────────────────── -->
+            <div class="profile-hero anim anim-2">
+                <div class="profile-hero-banner"></div>
+                <div class="profile-hero-body">
+                    <div class="profile-hero-avatar-row">
+                        <div class="profile-hero-avatar" id="avatarPreview"
+                             {% if is_self %}onclick="openModal('editProfileModal')" style="cursor:pointer"{% endif %}>
+                            {% if profile and profile.profile_image_url %}
+                                <img src="{{ profile.profile_image_url }}" alt="" id="avatarImg">
+                            {% else %}
+                                <span id="avatarInitial">{{ profile.username[0].upper() if profile and profile.username else 'U' }}</span>
+                            {% endif %}
+                            <div class="avatar-edit-overlay">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                    <circle cx="12" cy="13" r="4"/>
+                                </svg>
+                                Change Photo
+                            </div>
+                        </div>
+                        <div class="profile-hero-actions">
+                            {% if is_self %}
+                            <button class="btn-edit-profile" onclick="openModal('editProfileModal')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 a0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                Edit Profile
+                            </button>
+                            <button class="btn-share-profile" onclick="copyProfileLink()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/>
+                                    <circle cx="18" cy="19" r="3"/>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                                </svg>
+                                Share Profile
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="profile-identity">
+                        <div class="profile-hero-name" id="displayName">
+                            {{ profile.username if profile else 'Your Name' }}
+                        </div>
+                        <div class="profile-hero-badges">
+                            <span class="profile-hero-badge badge-entrepreneur">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px">
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                                </svg>
+                                Entrepreneur
+                            </span>
+                            {% if profile and profile.is_premium %}
+                            <span class="profile-hero-badge badge-premium">⭐ Premium</span>
+                            {% endif %}
+                            {% if profile and profile.is_verified_profile %}
+                            <span class="profile-hero-badge badge-verified-profile">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Verified
+                            </span>
+                            {% endif %}
+                            <!-- Admin Verification Status Badge -->
+                            {% if user_authorized == 'authorized' %}
+                            <span class="profile-hero-badge badge-authorized" title="Account approved by admin">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Admin Approved
+                            </span>
+                            {% elif user_authorized == 'rejected' %}
+                            <span class="profile-hero-badge badge-rejected" title="Account not approved by admin">
+                                ⚠️ Pending Review
+                            </span>
+                            {% else %}
+                            <span class="profile-hero-badge badge-pending" title="Account pending admin review">
+                                ⏳ Pending Review
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="profile-hero-tagline" id="displayTagline">
+                            {% if profile and profile.startup_name %}
+                                Founder & CEO at <strong>{{ profile.startup_name }}</strong>
+                                {% if profile.industry %} · {{ profile.industry }}{% endif %}
+                            {% else %}
+                                <span style="color:var(--text-muted);font-style:italic">Add your startup name to complete your profile</span>
+                            {% endif %}
+                        </div>
+                        <div class="profile-hero-meta">
+                            {% if profile and profile.location %}
+                            <span class="profile-meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span id="displayLocation">{{ profile.location }}</span>
+                            </span>
+                            {% endif %}
+                            {% if profile and profile.website_url %}
+                            <a class="profile-meta-item" href="{{ profile.website_url }}" target="_blank" id="displayWebsite">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="2" y1="12" x2="22" y2="12"/>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                </svg>
+                                {{ profile.website_url | replace('https://','') | replace('http://','') | truncate(30, true, '…') }}
+                            </a>
+                            {% endif %}
+                            <span class="profile-meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                Member since {{ profile.created_at.strftime('%b %Y') if profile and profile.created_at else '—' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Stats Bar -->
+                    <div class="profile-stats-bar">
+                        <div class="profile-stat-item">
+                            <div class="profile-stat-num" id="statPitches">{{ profile.total_pitches if profile and profile.total_pitches else '0' }}</div>
+                            <div class="profile-stat-label">Pitches Posted</div>
+                        </div>
+                        <div class="profile-stat-item">
+                            <div class="profile-stat-num" id="statInvestors">{{ profile.investors_connected if profile and profile.investors_connected else '0' }}</div>
+                            <div class="profile-stat-label">Investors Connected</div>
+                        </div>
+                        <div class="profile-stat-item">
+                            <div class="profile-stat-num" id="statViews">{{ profile.profile_views if profile and profile.profile_views else '0' }}</div>
+                            <div class="profile-stat-label">Profile Views</div>
+                        </div>
+                        <div class="profile-stat-item">
+                            <div class="profile-stat-num">{{ profile.profile_score if profile and profile.profile_score else '—' }}</div>
+                            <div class="profile-stat-label">Profile Score</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Main Grid ──────────────────────────────────── -->
+            <div class="profile-grid">
+
+                <!-- LEFT -->
+                <div>
+                    <!-- About -->
+                    <div class="profile-section-card anim anim-3">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                About
+                            </div>
+                            <button class="profile-section-edit-btn" onclick="openModal('editProfileModal')">Edit</button>
+                        </div>
+                        <div class="profile-section-body">
+                            {% if profile and profile.bio %}
+                                <p class="profile-bio-text" id="displayBio">{{ profile.bio }}</p>
+                            {% else %}
+                                <p class="profile-bio-empty" id="displayBio">
+                                    Add a compelling bio — describe your vision, experience, and what makes your startup unique.
+                                    Investors read this first.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Startup Details -->
+                    <div class="profile-section-card anim anim-3">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                                </svg>
+                                Startup Details
+                            </div>
+                            <button class="profile-section-edit-btn" onclick="openModal('editProfileModal')">Edit</button>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="profile-info-grid">
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Startup Name</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.startup_name) }}" id="dispStartupName">
+                                        {{ profile.startup_name if profile and profile.startup_name else 'Not specified' }}
+                                    </span>
+                                </div>
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Industry</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.industry) }}" id="dispIndustry">
+                                        {{ profile.industry if profile and profile.industry else 'Not specified' }}
+                                    </span>
+                                </div>
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Stage</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.stage) }}" id="dispStage">
+                                        {{ profile.stage | replace('-',' ') | title if profile and profile.stage else 'Not specified' }}
+                                    </span>
+                                </div>
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Location</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.location) }}" id="dispLocation">
+                                        {{ profile.location if profile and profile.location else 'Not specified' }}
+                                    </span>
+                                </div>
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Founded</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.founded_year) }}" id="dispFounded">
+                                        {{ profile.founded_year if profile and profile.founded_year else 'Not specified' }}
+                                    </span>
+                                </div>
+                                <div class="profile-info-item">
+                                    <span class="profile-info-label">Team Size</span>
+                                    <span class="profile-info-value {{ 'empty' if not (profile and profile.team_size) }}" id="dispTeam">
+                                        {{ profile.team_size if profile and profile.team_size else 'Not specified' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skills / Focus Areas -->
+                    <div class="profile-section-card anim anim-4">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                </svg>
+                                Areas of Focus
+                            </div>
+                            <button class="profile-section-edit-btn" onclick="openModal('editProfileModal')">Edit</button>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="profile-tags-wrap" id="displayTags">
+                                {% if profile and profile.focus_areas %}
+                                    {% for tag in profile.focus_areas.split(',') %}
+                                        <span class="profile-skill-tag">{{ tag.strip() }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="font-size:0.84rem;color:var(--text-muted);font-style:italic">
+                                        Add focus areas to help investors quickly understand your domain.
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social & Links -->
+                    <div class="profile-section-card anim anim-4">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                </svg>
+                                Links & Social
+                            </div>
+                            <button class="profile-section-edit-btn" onclick="openModal('editProfileModal')">Edit</button>
+                        </div>
+                        <div class="profile-section-body">
+                            <div class="social-links-list" id="displaySocial">
+                                {% if profile and profile.website_url %}
+                                <a class="social-link-item" href="{{ profile.website_url }}" target="_blank">
+                                    <div class="social-link-icon icon-web">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="social-link-text">
+                                        <div class="social-link-name">Website</div>
+                                        <div class="social-link-url">{{ profile.website_url }}</div>
+                                    </div>
+                                    <div class="social-link-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                                </a>
+                                {% endif %}
+                                {% if profile and profile.linkedin_url %}
+                                <a class="social-link-item" href="{{ profile.linkedin_url }}" target="_blank">
+                                    <div class="social-link-icon icon-linkedin">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                                            <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="social-link-text">
+                                        <div class="social-link-name">LinkedIn</div>
+                                        <div class="social-link-url">{{ profile.linkedin_url | truncate(40, true, '…') }}</div>
+                                    </div>
+                                    <div class="social-link-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                                </a>
+                                {% endif %}
+                                {% if profile and profile.twitter_url %}
+                                <a class="social-link-item" href="{{ profile.twitter_url }}" target="_blank">
+                                    <div class="social-link-icon icon-twitter">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="social-link-text">
+                                        <div class="social-link-name">Twitter / X</div>
+                                        <div class="social-link-url">{{ profile.twitter_url | truncate(40, true, '…') }}</div>
+                                    </div>
+                                    <div class="social-link-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                                </a>
+                                {% endif %}
+                                {% if not (profile and (profile.website_url or profile.linkedin_url or profile.twitter_url)) %}
+                                <p style="font-size:0.84rem;color:var(--text-muted);font-style:italic">
+                                    Add your website, LinkedIn and Twitter to boost investor trust.
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT -->
+                <div>
+                    <!-- Funding Ask Card -->
+                    <div class="funding-ask-card anim anim-3">
+                        <div class="funding-ask-label">💰 Funding Ask</div>
+                        <div class="funding-ask-amount" id="dispFundingAmt">
+                            {{ profile.funding_required if profile and profile.funding_required else '—' }}
+                        </div>
+                        <div class="funding-ask-stage">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                            {{ (profile.stage | replace('-',' ') | title) if profile and profile.stage else 'Stage TBD' }}
+                        </div>
+                        <div style="font-size:0.78rem;color:rgba(255,255,255,0.6);margin-bottom:14px" id="dispUseOfFunds">
+                            {{ profile.use_of_funds if profile and profile.use_of_funds else 'Update your profile to add use-of-funds details.' }}
+                        </div>
+                        <div class="funding-progress-wrap">
+                            <div class="funding-progress-label">
+                                <span>Progress</span>
+                                <span id="dispFundingPct">{{ (profile.funding_progress_pct | string) + '%' if profile and profile.funding_progress_pct else '0%' }}</span>
+                            </div>
+                            <div class="funding-progress-bar">
+                                <div class="funding-progress-fill" id="fundingFill"
+                                     style="width: {{ profile.funding_progress_pct if profile and profile.funding_progress_pct else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Completeness -->
+                    <div class="profile-section-card anim anim-4" style="margin-bottom:18px">
+                        <div class="profile-section-header">
+                            <div class="profile-section-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                </svg>
+                                Profile Completeness
+                            </div>
+                        </div>
+                        <div class="profile-section-body" style="text-align:center;padding-bottom:10px">
+                            <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:var(--teal-600)" id="completenessScore">
+                                {{ profile_completeness }}%
+                            </div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:16px">Profile Strength</div>
+                            <div style="height:8px;background:var(--gray-100);border-radius:var(--r-full);overflow:hidden;margin-bottom:16px">
+                                <div style="height:100%;background:linear-gradient(90deg,var(--teal-500),var(--blue-500));border-radius:var(--r-full);width:{{ profile_completeness }}%;transition:width 1s ease"></div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:8px;text-align:left">
+                                {% set checks = [
+                                    ('Profile photo', profile and profile.profile_image_url),
+                                    ('Bio / About', profile and profile.bio),
+                                    ('Startup name', profile and profile.startup_name),
+                                    ('Industry',     profile and profile.industry),
+                                    ('Location',     profile and profile.location),
+                                    ('Funding ask',  profile and profile.funding_required),
+                                    ('LinkedIn',     profile and profile.linkedin_url),
+                                    ('Website',      profile and profile.website_url),
+                                ] %}
+                                {% for label, done in checks %}
+                                <div style="display:flex;align-items:center;gap:8px;font-size:0.77rem;">
+                                    {% if done %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;color:var(--green-500);flex-shrink:0">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    <span style="color:var(--gray-700)">{{ label }}</span>
+                                    {% else %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--gray-300);flex-shrink:0">
+                                        <circle cx="12" cy="12" r="10"/>
+                                    </svg>
+                                    <span style="color:var(--text-muted)">{{ label }}</span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /profile-grid -->
+        </div>
+    </div>
+</div>
+
+
+<!-- ================================================================
+     EDIT PROFILE MODAL — MULTI-TAB
+     ================================================================ -->
+<div class="modal-overlay" id="editProfileModal" style="align-items:center;">
+    <div class="modal" style="width:600px;">
+        <div class="modal-header">
+            <div class="modal-header-title">Edit Your Profile</div>
+            <button class="modal-close" data-close-modal="editProfileModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Tab Nav -->
+        <div class="edit-modal-tabs">
+            <button class="edit-tab-btn active" data-tab="personal">Personal Info</button>
+            <button class="edit-tab-btn" data-tab="startup">Startup Details</button>
+            <button class="edit-tab-btn" data-tab="funding">Funding Ask</button>
+            <button class="edit-tab-btn" data-tab="links">Links & Social</button>
+        </div>
+
+        <form id="editProfileForm">
+            <div class="modal-body">
+
+                <!-- TAB 1: Personal -->
+                <div class="edit-tab-panel active" id="tab-personal">
+                    <div class="avatar-upload-section">
+                        <div class="avatar-upload-preview" id="modalAvatarPreview">
+                            {{ profile.username[0].upper() if profile and profile.username else 'U' }}
+                        </div>
+                        <div class="avatar-upload-info">
+                            <div class="avatar-upload-title">Profile Photo</div>
+                            <div class="avatar-upload-sub">JPG, PNG, GIF up to 5MB. Square images work best.</div>
+                            <label class="avatar-upload-btn" for="avatarFileInput">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Upload Photo
+                                <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input class="form-input-premium" style="width:100%" id="ep_username" type="text"
+                                placeholder="Your full name"
+                                value="{{ profile.username if profile and profile.username else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bio / About You</label>
+                        <textarea class="form-input-premium" id="ep_bio" style="min-height:120px; width:100%; resize:vertical;"
+                                  placeholder="Describe your background, vision, and why you're building this…">{{ profile.bio if profile and profile.bio else '' }}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input class="form-input-premium" style="width:100%" id="ep_location" type="text"
+                                   placeholder="e.g. Mumbai, India"
+                                   value="{{ profile.location if profile and profile.location else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Focus Areas <span style="font-weight:400;color:var(--gray-400)">(comma separated)</span></label>
+                            <input class="form-input-premium" style="width:100%" id="ep_focus" type="text"
+                                   placeholder="e.g. AI, B2B SaaS, Climate Tech"
+                                   value="{{ profile.focus_areas if profile and profile.focus_areas else '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Startup -->
+                <div class="edit-tab-panel" id="tab-startup">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Startup Name</label>
+                            <input class="form-input-premium" style="width:100%" id="ep_startup_name" type="text"
+                                   placeholder="e.g. TechFlow AI"
+                                   value="{{ profile.startup_name if profile and profile.startup_name else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Industry</label>
+                            <input class="form-input-premium" style="width:100%" id="ep_industry" type="text"
+                                   placeholder="e.g. FinTech, HealthTech, SaaS"
+                                   value="{{ profile.industry if profile and profile.industry else '' }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Stage</label>
+                            <select class="form-input-premium" style="width:100%; height:auto;" id="ep_stage">
+                                {% set sel = profile.stage if profile and profile.stage else '' %}
+                                <option value="">Select stage…</option>
+                                <option value="idea"     {{ 'selected' if sel == 'idea' }}>💡 Idea</option>
+                                <option value="pre-seed" {{ 'selected' if sel == 'pre-seed' }}>🌱 Pre-Seed</option>
+                                <option value="seed"     {{ 'selected' if sel == 'seed' }}>🚀 Seed</option>
+                                <option value="series-a" {{ 'selected' if sel == 'series-a' }}>📈 Series A</option>
+                                <option value="series-b" {{ 'selected' if sel == 'series-b' }}>🏢 Series B</option>
+                                <option value="growth"   {{ 'selected' if sel == 'growth' }}>🌍 Growth</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Founded Year</label>
+                            <input class="form-input-premium" style="width:100%" id="ep_founded" type="number"
+                                   placeholder="{{ now_year }}" min="2000" max="{{ now_year }}"
+                                   value="{{ profile.founded_year if profile and profile.founded_year else '' }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Team Size</label>
+                        <select class="form-input-premium" style="width:100%; height:auto;" id="ep_team_size">
+                            {% set ts = profile.team_size if profile and profile.team_size else '' %}
+                            <option value="">Select…</option>
+                            <option value="Solo founder" {{ 'selected' if ts == 'Solo founder' }}>Solo founder</option>
+                            <option value="2-5"  {{ 'selected' if ts == '2-5' }}>2–5 people</option>
+                            <option value="6-10" {{ 'selected' if ts == '6-10' }}>6–10 people</option>
+                            <option value="11-25"{{ 'selected' if ts == '11-25' }}>11–25 people</option>
+                            <option value="25+"  {{ 'selected' if ts == '25+' }}>25+ people</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Funding -->
+                <div class="edit-tab-panel" id="tab-funding">
+                    <div class="form-group">
+                        <label class="form-label">Funding Required</label>
+                        <div class="funding-input-row">
+                            <input class="form-input-premium" style="width:100%" id="ep_funding_amount" type="number"
+                                   placeholder="e.g. 5000000" min="0"
+                                   value="{{ profile.funding_amount if profile and profile.funding_amount else '' }}">
+                            <select class="form-input-premium" style="width:100%; height:auto;" id="ep_funding_currency">
+                                {% set fc = profile.funding_currency if profile and profile.funding_currency else 'INR' %}
+                                <option value="INR" {{ 'selected' if fc == 'INR' }}>INR ₹</option>
+                                <option value="USD" {{ 'selected' if fc == 'USD' }}>USD $</option>
+                                <option value="EUR" {{ 'selected' if fc == 'EUR' }}>EUR €</option>
+                                <option value="GBP" {{ 'selected' if fc == 'GBP' }}>GBP £</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Use of Funds</label>
+                        <textarea class="form-input-premium" style="width:100%; min-height:80px; resize:vertical;" id="ep_use_of_funds"
+                                  placeholder="e.g. 40% product development, 35% sales & marketing, 25% operations…">{{ profile.use_of_funds if profile and profile.use_of_funds else '' }}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Funding Progress %</label>
+                            <input class="form-input-premium" style="width:100%" id="ep_progress" type="number"
+                                   placeholder="0–100" min="0" max="100"
+                                   value="{{ profile.funding_progress_pct if profile and profile.funding_progress_pct else '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: Links -->
+                <div class="edit-tab-panel" id="tab-links">
+                    <div class="form-group">
+                        <label class="form-label">Website</label>
+                        <input class="form-input-premium" style="width:100%" id="ep_website" type="url"
+                               placeholder="https://yourstartup.com"
+                               value="{{ profile.website_url if profile and profile.website_url else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">LinkedIn Profile</label>
+                        <input class="form-input-premium" style="width:100%" id="ep_linkedin" type="url"
+                               placeholder="https://linkedin.com/in/yourname"
+                               value="{{ profile.linkedin_url if profile and profile.linkedin_url else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Twitter / X Profile</label>
+                        <input class="form-input-premium" style="width:100%" id="ep_twitter" type="url"
+                               placeholder="https://x.com/yourhandle"
+                               value="{{ profile.twitter_url if profile and profile.twitter_url else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pitch Deck URL <span style="font-weight:400;color:var(--gray-400)">(Google Drive, Docsend…)</span></label>
+                        <input class="form-input-premium" style="width:100%" id="ep_deck_url" type="url"
+                               placeholder="https://drive.google.com/…"
+                               value="{{ profile.pitch_deck_url if profile and profile.pitch_deck_url else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Demo / Product URL</label>
+                        <input class="form-input-premium" style="width:100%" id="ep_demo_url" type="url"
+                               placeholder="https://demo.yourstartup.com"
+                               value="{{ profile.demo_url if profile and profile.demo_url else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Video Pitch URL <span style="font-weight:400;color:var(--gray-400)">(YouTube link…)</span></label>
+                        <input class="form-input-premium" style="width:100%" id="ep_video_pitch" type="url"
+                               placeholder="https://youtube.com/watch?v=…"
+                               value="{{ profile.video_pitch_url if profile and profile.video_pitch_url else '' }}">
+                    </div>
+                </div>
+
+            </div><!-- /modal-body -->
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-close-modal="editProfileModal">Cancel</button>
+                <button type="submit" class="btn-submit" id="profileSaveBtn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Premium modal (shared) -->
+<div class="modal-overlay" id="premiumModal">
+    <div class="modal" style="width:520px">
+        <div class="modal-header">
+            <div class="modal-header-title">⭐ Upgrade to Premium</div>
+            <button class="modal-close" data-close-modal="premiumModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="premium-header-banner" style="text-align:center;padding:8px 0 18px">
+                <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#f59e0b,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Unlock Your Full Potential</h2>
+                <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px">More visibility, AI analysis, and priority placement.</p>
+            </div>
+            <button class="premium-cta-btn" onclick="showToast('Payment integration coming soon!','default')" style="display:block;width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:var(--r-md);font-size:0.9rem;font-weight:700;cursor:pointer">
+                ⭐ Get Started with Elite
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/entrepreneur_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='js/entrepreneur_profile.js') }}"></script>
+</body>
+</html>

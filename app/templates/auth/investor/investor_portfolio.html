@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio — EISC Investor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investor/investor_portfolio.css') }}">
+</head>
+<body>
+
+{% set active_nav = 'portfolio' %}
+{% include 'auth/investor/sidebar.html' %}
+
+<div class="main-wrap">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="topbar-titles">
+            <div class="topbar-page-title">My <span>Portfolio</span></div>
+            <div class="topbar-subtitle">Define your investment identity. Use AI to sharpen your thesis and process.</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!','default')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {% if unread_notifs and unread_notifs > 0 %}<span class="topbar-notif-dot"></span>{% endif %}
+            </button>
+            <div class="topbar-divider"></div>
+            <div class="topbar-avatar" title="{{ profile.full_name or profile.username if profile else '' }}">
+                {% if profile and profile.profile_image_url %}
+                    <img src="{{ profile.profile_image_url }}" alt="">
+                {% else %}
+                    {{ (profile.full_name or profile.username or 'I')[0].upper() if profile else 'I' }}
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE BODY -->
+    <div class="page-content">
+        <div class="portfolio-page">
+
+            <!-- ══════════════════════════════════════════════════════
+                 LEFT COLUMN
+            ══════════════════════════════════════════════════════ -->
+            <div class="portfolio-left">
+
+                <!-- ── CARD 1: Investment Parameters (numeric / short-text) ── -->
+                <div class="params-card anim anim-1">
+                    <div class="params-header">
+                        <div>
+                            <div class="params-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                                </svg>
+                                Investment Parameters
+                            </div>
+                            <div class="params-subtitle">Key criteria displayed to founders when they view your profile.</div>
+                        </div>
+                        <button class="btn-save-portfolio" id="savePortfolioBtn" onclick="savePortfolio()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save All
+                        </button>
+                    </div>
+
+                    <div class="params-grid">
+
+                        <!-- Preferred Sectors — spans both columns -->
+                        <div class="param-field param-span2">
+                            <label class="param-label" for="param-preferred_sectors">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                </svg>
+                                Preferred Sectors
+                            </label>
+                            <input class="param-input" type="text"
+                                   id="param-preferred_sectors"
+                                   placeholder="e.g. AI/ML, FinTech, HealthTech, SaaS, Climate Tech"
+                                   value="{{ portfolio.preferred_sectors or '' }}">
+                        </div>
+
+                        <!-- Investment Stage — spans both columns -->
+                        <div class="param-field param-span2">
+                            <label class="param-label" for="param-investment_stage">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 6 13.46 15.89 8 10.5 1 17.5"/><polyline points="23 6 23 12 17 12"/>
+                                </svg>
+                                Investment Stage
+                            </label>
+                            <input class="param-input" type="text"
+                                   id="param-investment_stage"
+                                   placeholder="e.g. Pre-Seed, Seed, Series A-B"
+                                   value="{{ portfolio.investment_stage or '' }}">
+                        </div>
+
+                        <!-- Min Ticket -->
+                        <div class="param-field">
+                            <label class="param-label" for="param-min_ticket_size">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                                Min Ticket Size (₹)
+                            </label>
+                            <input class="param-input" type="number"
+                                   id="param-min_ticket_size"
+                                   placeholder="e.g. 500000"
+                                   min="0"
+                                   value="{{ (portfolio.min_ticket_size | int) if portfolio.min_ticket_size else '' }}"
+                                   oninput="formatTicketHint(this, 'hint-min_ticket_size')">
+                            <span class="param-hint" id="hint-min_ticket_size">
+                                {%- if portfolio.min_ticket_size -%}
+                                    ₹{{ '{:,.0f}'.format(portfolio.min_ticket_size) }}
+                                {%- endif -%}
+                            </span>
+                        </div>
+
+                        <!-- Max Ticket -->
+                        <div class="param-field">
+                            <label class="param-label" for="param-max_ticket_size">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                                Max Ticket Size (₹)
+                            </label>
+                            <input class="param-input" type="number"
+                                   id="param-max_ticket_size"
+                                   placeholder="e.g. 50000000"
+                                   min="0"
+                                   value="{{ (portfolio.max_ticket_size | int) if portfolio.max_ticket_size else '' }}"
+                                   oninput="formatTicketHint(this, 'hint-max_ticket_size')">
+                            <span class="param-hint" id="hint-max_ticket_size">
+                                {%- if portfolio.max_ticket_size -%}
+                                    ₹{{ '{:,.0f}'.format(portfolio.max_ticket_size) }}
+                                {%- endif -%}
+                            </span>
+                        </div>
+
+                        <!-- Available Funds -->
+                        <div class="param-field">
+                            <label class="param-label" for="param-available_funds">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                                Available Funds (₹)
+                            </label>
+                            <input class="param-input" type="number"
+                                   id="param-available_funds"
+                                   placeholder="e.g. 100000000"
+                                   min="0"
+                                   value="{{ (portfolio.available_funds | int) if portfolio.available_funds else '' }}"
+                                   oninput="formatTicketHint(this, 'hint-available_funds')">
+                            <span class="param-hint" id="hint-available_funds">
+                                {%- if portfolio.available_funds -%}
+                                    ₹{{ '{:,.0f}'.format(portfolio.available_funds) }}
+                                {%- endif -%}
+                            </span>
+                        </div>
+
+                        <!-- Capital Deployed % -->
+                        <div class="param-field">
+                            <label class="param-label" for="param-capital_deployed_pct">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                                </svg>
+                                Capital Deployed (%)
+                            </label>
+                            <input class="param-input" type="number"
+                                   id="param-capital_deployed_pct"
+                                   placeholder="e.g. 65"
+                                   min="0" max="100"
+                                   value="{{ (portfolio.capital_deployed_pct | int) if portfolio.capital_deployed_pct else '' }}">
+                        </div>
+
+                    </div><!-- /params-grid -->
+                </div><!-- /params-card -->
+
+
+                <!-- ── CARD 2: Investment Profile Builder (8 AI-enhanceable text sections) ── -->
+                <div class="portfolio-editor-card anim anim-2">
+                    <div class="portfolio-editor-header">
+                        <div>
+                            <div class="portfolio-editor-title">Investment Profile Builder</div>
+                            <div class="portfolio-editor-subtitle">Founders read every section. A complete profile attracts better deal flow.</div>
+                        </div>
+                        <div class="portfolio-editor-actions">
+                            <button class="btn-ai-enhance" id="globalAiBtn" onclick="enhanceAllSections()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                                </svg>
+                                Enhance All with AI
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="portfolio-sections">
+
+                        {#
+                         IMPORTANT: This list is exactly 8 items and must match
+                         SECTIONS + FIELD_MAP in investor_portfolio.js
+                        #}
+                        {% set sections = [
+                            {
+                                'id': 'thesis',
+                                'label': 'Investment Thesis',
+                                'icon_class': 'section-thesis',
+                                'icon_path': '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
+                                'hint': 'Core investment philosophy',
+                                'placeholder': 'What is your overarching investment thesis? What future are you betting on? e.g., "I invest in founders using AI to disrupt legacy B2B software, typically at Pre-Seed to Seed stage, with a focus on unit economics over growth…"',
+                                'field': 'investment_thesis'
+                            },
+                            {
+                                'id': 'criteria',
+                                'label': 'Deal Criteria',
+                                'icon_class': 'section-criteria',
+                                'icon_path': '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+                                'hint': 'What triggers a yes — and a hard no',
+                                'placeholder': 'List your investment criteria clearly. Stage, ticket size, revenue threshold, team requirements, geography, what makes you say no instantly. Founders use this to self-qualify before reaching out.',
+                                'field': 'deal_criteria'
+                            },
+                            {
+                                'id': 'highlights',
+                                'label': 'Portfolio Highlights',
+                                'icon_class': 'section-highlights',
+                                'icon_path': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+                                'hint': 'Notable wins, unicorns, exits',
+                                'placeholder': 'Highlight your best portfolio companies and outcomes. Unicorns, successful exits, Series A+ companies. Be specific with company names, valuations, or multiples where possible.',
+                                'field': 'portfolio_highlights'
+                            },
+                            {
+                                'id': 'sectors',
+                                'label': 'Sector Expertise',
+                                'icon_class': 'section-sectors',
+                                'icon_path': '<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>',
+                                'hint': 'Your domain knowledge & unfair advantage',
+                                'placeholder': 'What sectors do you know deeply? What gives you an edge? e.g., "15 years in FinTech operations — I understand regulatory moats, unit economics, and customer acquisition in financial services better than most…"',
+                                'field': 'sector_expertise'
+                            },
+                            {
+                                'id': 'dd',
+                                'label': 'Due Diligence Framework',
+                                'icon_class': 'section-dd',
+                                'icon_path': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+                                'hint': 'How you evaluate deals',
+                                'placeholder': 'Describe your DD process — what you look at, in what order, timelines, what you verify externally. Founders appreciate transparency here. e.g., "Initial call → 2-week commercial DD → Reference checks → Legal/Financial DD → Term Sheet…"',
+                                'field': 'dd_framework'
+                            },
+                            {
+                                'id': 'valueadd',
+                                'label': 'Value Add',
+                                'icon_class': 'section-valueadd',
+                                'icon_path': '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+                                'hint': 'Beyond capital — your real edge',
+                                'placeholder': 'What do you bring beyond the cheque? Network access, operational experience, recruiting help, BD introductions, follow-on capital, board experience? Be specific — the best founders choose investors for this.',
+                                'field': 'value_add'
+                            },
+                            {
+                                'id': 'exit',
+                                'label': 'Exit Strategy',
+                                'icon_class': 'section-exit',
+                                'icon_path': '<polyline points="23 7 13 17 8 12 1 19"/><polyline points="17 7 23 7 23 13"/>',
+                                'hint': 'Return expectations & timelines',
+                                'placeholder': 'How do you think about exits? Target return multiples, preferred exit paths (M&A, IPO, secondary), typical hold period. Are you patient capital or do you have fund lifecycle pressures?',
+                                'field': 'exit_strategy'
+                            },
+                            {
+                                'id': 'coinvest',
+                                'label': 'Co-Investment',
+                                'icon_class': 'section-coinvest',
+                                'icon_path': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+                                'hint': 'Syndicate & co-investor preferences',
+                                'placeholder': 'Do you lead rounds or follow? Open to syndicates? Preferred co-investors or networks? Minimum ownership requirements? Will you re-invest in follow-on rounds?',
+                                'field': 'co_investment'
+                            },
+                        ] %}
+
+                        {% for sec in sections %}
+                        <div class="portfolio-section-item {% if loop.first %}open{% endif %}" id="sec-{{ sec.id }}">
+                            <div class="portfolio-section-header" onclick="toggleSection('{{ sec.id }}')">
+                                <div class="portfolio-section-icon {{ sec.icon_class }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        {{ sec.icon_path | safe }}
+                                    </svg>
+                                </div>
+                                <span class="portfolio-section-label">{{ sec.label }}</span>
+                                <span class="portfolio-section-hint">{{ sec.hint }}</span>
+                                <span class="portfolio-section-word-count" id="wc-{{ sec.id }}">0 words</span>
+                                <span class="portfolio-section-chevron">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </span>
+                            </div>
+
+                            <div class="portfolio-section-body">
+                                <textarea class="portfolio-textarea"
+                                          id="field-{{ sec.field }}"
+                                          data-section="{{ sec.id }}"
+                                          placeholder="{{ sec.placeholder }}"
+                                          oninput="updateWordCount('{{ sec.id }}', this)">{{ portfolio[sec.field] if portfolio and portfolio[sec.field] else '' }}</textarea>
+
+                                <!-- AI result box — hidden until AI responds -->
+                                <div class="ai-result-box" id="ai-result-{{ sec.id }}">
+                                    <div class="ai-result-header">
+                                        <div class="ai-result-label">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                                            </svg>
+                                            AI Enhanced Version
+                                        </div>
+                                        <div class="ai-result-actions">
+                                            <button class="ai-accept-btn" onclick="acceptAiResult('{{ sec.id }}', '{{ sec.field }}')">Use This</button>
+                                            <button class="ai-dismiss-btn" onclick="dismissAiResult('{{ sec.id }}')">Dismiss</button>
+                                        </div>
+                                    </div>
+                                    <div class="ai-result-text" id="ai-text-{{ sec.id }}"></div>
+                                </div>
+
+                                <div class="portfolio-section-footer">
+                                    <button class="portfolio-ai-btn"
+                                            id="ai-btn-{{ sec.id }}"
+                                            onclick="enhanceSection('{{ sec.id }}', '{{ sec.field }}', '{{ sec.label }}')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                                        </svg>
+                                        ✨ Enhance with AI
+                                    </button>
+                                    <span class="portfolio-char-count" id="cc-{{ sec.id }}">0 characters</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                    </div><!-- /portfolio-sections -->
+                </div><!-- /portfolio-editor-card -->
+            </div><!-- /portfolio-left -->
+
+
+            <!-- ══════════════════════════════════════════════════════
+                 RIGHT COLUMN
+            ══════════════════════════════════════════════════════ -->
+            <div class="portfolio-right">
+
+                <!-- Profile Strength Ring — loops same 8 sections as JS SECTIONS array -->
+                <div class="strength-card anim anim-1">
+                    <div class="strength-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                        Profile Strength
+                    </div>
+                    <div class="strength-ring-wrap">
+                        <svg class="strength-ring" viewBox="0 0 72 72">
+                            <circle class="ring-bg"   cx="36" cy="36" r="30"/>
+                            <circle class="ring-fill" id="strengthRing" cx="36" cy="36" r="30"/>
+                        </svg>
+                        <div>
+                            <div class="strength-pct" id="strengthPct">0%</div>
+                            <div class="strength-sub">profile complete</div>
+                        </div>
+                    </div>
+                    <!-- Exactly 8 checks — one per section above -->
+                    <div class="strength-checks">
+                        {% for sec in sections %}
+                        <div class="strength-check" id="check-{{ sec.id }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="check-todo">
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                            {{ sec.label }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Portfolio Stats -->
+                <div class="portfolio-stats-card anim anim-2">
+                    <div class="ps-card-label">💼 Portfolio Overview</div>
+                    <div class="ps-stats-grid">
+                        <div class="ps-stat">
+                            <div class="ps-stat-num">{{ stats.total_investments or 0 }}</div>
+                            <div class="ps-stat-label">Investments</div>
+                        </div>
+                        <div class="ps-stat">
+                            <div class="ps-stat-num">{{ stats.active_count or 0 }}</div>
+                            <div class="ps-stat-label">Active</div>
+                        </div>
+                        <div class="ps-stat">
+                            <div class="ps-stat-num">{{ stats.interests_sent or 0 }}</div>
+                            <div class="ps-stat-label">Interests Sent</div>
+                        </div>
+                        <div class="ps-stat">
+                            <div class="ps-stat-num">{{ stats.deals_in_pipeline or 0 }}</div>
+                            <div class="ps-stat-label">Deals Pipeline</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deal Pipeline -->
+                <div class="pipeline-card anim anim-2">
+                    <div class="pipeline-card-header">
+                        <div class="pipeline-card-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                            Deal Pipeline
+                        </div>
+                        <a class="pipeline-view-all" href="#">View All →</a>
+                    </div>
+                    <div class="pipeline-body">
+                        {% if deals %}
+                            {% for deal in deals %}
+                            <div class="deal-item">
+                                <div class="deal-avatar">
+                                    {% if deal.profile_image_url %}
+                                        <img src="{{ deal.profile_image_url }}" alt="">
+                                    {% else %}
+                                        {{ (deal.startup_name or 'S')[0].upper() }}
+                                    {% endif %}
+                                </div>
+                                <div class="deal-info">
+                                    <div class="deal-startup">{{ deal.startup_name or deal.entrepreneur_username or '—' }}</div>
+                                    <div class="deal-meta">
+                                        {% if deal.deal_value %}₹{{ '{:,.0f}'.format(deal.deal_value) }} · {% endif %}
+                                        {% if deal.equity_offered %}{{ deal.equity_offered }}% equity · {% endif %}
+                                        {{ deal.updated_at.strftime('%d %b') if deal.updated_at else '' }}
+                                    </div>
+                                </div>
+                                <span class="deal-stage-pill stage-{{ deal.deal_stage }}">
+                                    {{ deal.deal_stage | replace('_', ' ') | title }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="pipeline-empty">
+                                No active deals yet.<br>
+                                <span style="font-size:0.72rem">Express interest in startups to build your pipeline.</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recent Interests -->
+                <div class="interests-card anim anim-3">
+                    <div class="interests-card-header">
+                        <div class="interests-card-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                            Recent Interests
+                        </div>
+                        <a class="interests-view-all" href="#">View All →</a>
+                    </div>
+                    <div class="interests-body">
+                        {% if interests %}
+                            {% for ii in interests %}
+                            <div class="interest-item">
+                                <div class="interest-avatar">
+                                    {% if ii.profile_image_url %}
+                                        <img src="{{ ii.profile_image_url }}" alt="">
+                                    {% else %}
+                                        {{ (ii.startup_name or ii.entrepreneur_email or 'E')[0].upper() }}
+                                    {% endif %}
+                                </div>
+                                <div class="interest-info">
+                                    <div class="interest-name">{{ ii.startup_name or ii.entrepreneur_username or ii.entrepreneur_email }}</div>
+                                    <div class="interest-meta">
+                                        {{ ii.industry or 'Startup' }}
+                                        {% if ii.stage %} · {{ ii.stage }}{% endif %}
+                                        · {{ ii.created_at.strftime('%d %b') if ii.created_at else '' }}
+                                    </div>
+                                </div>
+                                <span class="interest-status-pill status-{{ ii.status }}">{{ ii.status | title }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="pipeline-empty">
+                                No interests expressed yet.<br>
+                                <span style="font-size:0.72rem">Browse the feed to find startups matching your thesis.</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Investments Made -->
+                <div class="portfolio-list-card anim anim-3">
+                    <div class="portfolio-list-header">
+                        <div class="portfolio-list-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                            Investments Made
+                        </div>
+                    </div>
+                    <div class="portfolio-list-body">
+                        {% if portfolio_companies %}
+                            {% for inv in portfolio_companies %}
+                            <div class="port-invest-item">
+                                <div class="port-invest-icon" style="background: {{ loop.cycle(
+                                    'linear-gradient(135deg,#10b981,#059669)',
+                                    'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                                    'linear-gradient(135deg,#f59e0b,#b45309)',
+                                    'linear-gradient(135deg,#8b5cf6,#6d28d9)'
+                                ) }}">
+                                    {{ inv.startup_name[0].upper() if inv.startup_name else '?' }}
+                                </div>
+                                <div class="port-invest-info">
+                                    <div class="port-invest-name">{{ inv.startup_name }}</div>
+                                    <div class="port-invest-meta">
+                                        {{ inv.sector or 'N/A' }}
+                                        {% if inv.equity_percentage %} · {{ inv.equity_percentage }}% equity{% endif %}
+                                        {% if inv.investment_date %} · {{ inv.investment_date.strftime('%b %Y') }}{% endif %}
+                                    </div>
+                                </div>
+                                <div class="port-invest-amount">
+                                    <div>₹{{ '{:,.0f}'.format(inv.investment_amount) if inv.investment_amount else '—' }}</div>
+                                    <div style="text-align:right;margin-top:2px">
+                                        <span class="deal-stage-pill port-status-{{ inv.status }}" style="font-size:0.58rem;padding:2px 7px">
+                                            {{ inv.status | title }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="pipeline-empty">
+                                No investments recorded yet.<br>
+                                <span style="font-size:0.72rem">Close deals to populate your portfolio.</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div><!-- /portfolio-right -->
+
+        </div><!-- /portfolio-page -->
+    </div><!-- /page-content -->
+</div><!-- /main-wrap -->
+
+<!-- Premium Modal -->
+<div class="modal-overlay" id="premiumModal">
+    <div class="modal" style="width:500px">
+        <div class="modal-header">
+            <div class="modal-header-title">⭐ Upgrade to Premium</div>
+            <button class="modal-close" data-close-modal="premiumModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body" style="text-align:center;padding:24px">
+            <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#f59e0b,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px">
+                Unlock Premium Investor Access
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:20px">
+                Unlimited AI enhancements, verified badge, priority deal flow.
+            </p>
+            <button onclick="showToast('Payment integration coming soon!','default')"
+                    style="display:block;width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:var(--r-md);font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">
+                ⭐ Get Started
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Pass investor context to JS safely via tojson (handles quotes/special chars) -->
+<script>
+    const INV_FIRM_NAME = {{ (profile.firm_name or '') | tojson }};
+    const INV_FULL_NAME = {{ (profile.full_name or profile.username or 'Investor') | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/investor/investor_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/investor/investor_portfolio.js') }}"></script><script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script></body>
+</html>
