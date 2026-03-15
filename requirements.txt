@@ -5,12 +5,13 @@ python-dotenv==1.0.0
 
 # Database
 mysql-connector-python==8.1.0
+psycopg2-binary==2.9.9
 
 # AI/ML - CRITICAL for matching engine
-sentence-transformers==2.2.2
-torch==2.0.1
-numpy==1.24.3
-scikit-learn==1.3.0
+sentence-transformers==2.7.0
+torch==2.3.0
+numpy==1.26.4
+scikit-learn==1.3.2
 
 # Security
 Werkzeug==2.3.7

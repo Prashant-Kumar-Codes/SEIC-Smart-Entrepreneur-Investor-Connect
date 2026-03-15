@@ -43,11 +43,15 @@
             <div class="chat-root">
 
                 <!-- ══ LEFT PANEL — session history ══ -->
+                <div class="chat-sidebar-overlay" onclick="toggleChatSidebar()"></div>
                 <aside class="chat-sidebar">
                     <div class="chat-sidebar-header">
                         <span style="font-size:18px;">🤖</span>
                         <h2>AI Chat</h2>
                         <button class="new-chat-btn" onclick="startNewChat()">+ New</button>
+                        <button class="chat-mobile-close" onclick="toggleChatSidebar()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
                     </div>
 
                     <div class="mode-tabs">
@@ -66,6 +70,9 @@
                 <main class="chat-main">
 
                     <div class="chat-topbar">
+                        <button class="chat-mobile-menu-btn" onclick="toggleChatSidebar()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </button>
                         <div class="chat-mode-badge" id="mode-badge">
                             <span class="dot"></span>
                             <span id="mode-badge-text">Guidance Mode</span>
@@ -190,6 +197,7 @@
     {{super()}}
 
     <script>
+        document.body.classList.add('chat-page-body');
         const PROFILE_IMAGE = "{{ profile.profile_image_url or '' }}";
         const USERNAME      = "{{ profile.username or '' }}";
     </script>

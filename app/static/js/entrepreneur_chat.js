@@ -72,6 +72,11 @@ async function loadSession(sessionId, mode, investorEmail) {
     document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'));
     event?.currentTarget?.classList.add('active');
 
+    if (window.innerWidth <= 768) {
+        document.querySelector('.chat-sidebar').classList.remove('active');
+        document.querySelector('.chat-sidebar-overlay').classList.remove('active');
+    }
+
     try {
         const res  = await fetch(`/api/chat/history?session_id=${sessionId}&mode=${mode}`);
         const data = await res.json();
@@ -80,6 +85,14 @@ async function loadSession(sessionId, mode, investorEmail) {
     } catch {
         showToast('Failed to load conversation.', 'error');
     }
+}
+
+// ═══════════════════════════════════════════════
+// MOBILE SIDEBAR
+// ═══════════════════════════════════════════════
+function toggleChatSidebar() {
+    document.querySelector('.chat-sidebar').classList.toggle('active');
+    document.querySelector('.chat-sidebar-overlay').classList.toggle('active');
 }
 
 // ═══════════════════════════════════════════════
@@ -92,6 +105,11 @@ function startNewChat() {
     document.getElementById('welcome-state').style.display = 'flex';
     updateQuickPrompts();
     document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'));
+    
+    if (window.innerWidth <= 768) {
+        document.querySelector('.chat-sidebar').classList.remove('active');
+        document.querySelector('.chat-sidebar-overlay').classList.remove('active');
+    }
 }
 
 // ═══════════════════════════════════════════════
@@ -382,3 +400,4 @@ window.sendMessage        = sendMessage;
 window.handleKey          = handleKey;
 window.autoResize         = autoResize;
 window.showToast          = showToast;
+window.toggleChatSidebar  = toggleChatSidebar;

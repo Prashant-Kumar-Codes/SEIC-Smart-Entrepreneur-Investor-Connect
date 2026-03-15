@@ -217,6 +217,7 @@
 
 <!-- Page config for JS -->
 <script>
+    document.body.classList.add('chat-page-body');
     const INV_PROFILE_IMAGE = "{{ profile.profile_image_url or '' }}";
     const INV_USERNAME      = "{{ profile.full_name or profile.username or 'Investor' }}";
 </script>
