@@ -161,16 +161,16 @@ def save_pitch():
                 (email, problem, solution, market, business_model,
                  traction, team, financials, the_ask, video_pitch_url)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            ON DUPLICATE KEY UPDATE
-                problem        = VALUES(problem),
-                solution       = VALUES(solution),
-                market         = VALUES(market),
-                business_model = VALUES(business_model),
-                traction       = VALUES(traction),
-                team           = VALUES(team),
-                financials     = VALUES(financials),
-                the_ask        = VALUES(the_ask),
-                video_pitch_url= VALUES(video_pitch_url),
+            ON CONFLICT (email) DO UPDATE SET
+                problem        = EXCLUDED.problem,
+                solution       = EXCLUDED.solution,
+                market         = EXCLUDED.market,
+                business_model = EXCLUDED.business_model,
+                traction       = EXCLUDED.traction,
+                team           = EXCLUDED.team,
+                financials     = EXCLUDED.financials,
+                the_ask        = EXCLUDED.the_ask,
+                video_pitch_url= EXCLUDED.video_pitch_url,
                 updated_at     = NOW()
         """, (
             email,
@@ -254,7 +254,7 @@ def save_deck_url():
         cursor.execute("""
             INSERT INTO entrepreneur_profile (email, pitch_deck_url)
             VALUES (%s, %s)
-            ON DUPLICATE KEY UPDATE pitch_deck_url = VALUES(pitch_deck_url)
+            ON CONFLICT (email) DO UPDATE SET pitch_deck_url = EXCLUDED.pitch_deck_url
         """, (email, url or None))
         mycon.commit()
         cursor.close(); mycon.close()
@@ -309,12 +309,13 @@ def upload_pitch_video():
         cursor.execute("""
             INSERT INTO entrepreneur_profile (email, video_pitch_url) 
             VALUES (%s, %s)
-            ON DUPLICATE KEY UPDATE video_pitch_url = VALUES(video_pitch_url)
+            ON CONFLICT (email) DO UPDATE SET video_pitch_url = EXCLUDED.video_pitch_url
         """, (email, video_url))
 
         # Also save to pitch_content if exists
         cursor.execute("""
-            INSERT IGNORE INTO pitch_content (email) VALUES (%s)
+            INSERT INTO pitch_content (email) VALUES (%s)
+            ON CONFLICT DO NOTHING
         """, (email,))
         cursor.execute("""
             UPDATE pitch_content SET video_pitch_url = %s WHERE email = %s

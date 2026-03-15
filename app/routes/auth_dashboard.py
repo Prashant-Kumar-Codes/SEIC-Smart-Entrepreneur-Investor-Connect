@@ -253,8 +253,9 @@ def interact_post(post_id):
 
         # Upsert interaction (ignore duplicate)
         cursor.execute("""
-            INSERT IGNORE INTO post_interactions (user_email, post_id, interaction_type)
+            INSERT INTO post_interactions (user_email, post_id, interaction_type)
             VALUES (%s, %s, %s)
+            ON CONFLICT DO NOTHING
         """, (email, post_id, interaction_type))
 
         toggled = cursor.rowcount > 0   # 1 = new interaction, 0 = already existed
@@ -307,14 +308,14 @@ def edit_profile():
             INSERT INTO entrepreneur_profiles
                 (email, startup_name, bio, industry, location, website_url, linkedin_url, twitter_url)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                startup_name = VALUES(startup_name),
-                bio          = VALUES(bio),
-                industry     = VALUES(industry),
-                location     = VALUES(location),
-                website_url  = VALUES(website_url),
-                linkedin_url = VALUES(linkedin_url),
-                twitter_url  = VALUES(twitter_url)
+            ON CONFLICT (email) DO UPDATE SET
+                startup_name = EXCLUDED.startup_name,
+                bio          = EXCLUDED.bio,
+                industry     = EXCLUDED.industry,
+                location     = EXCLUDED.location,
+                website_url  = EXCLUDED.website_url,
+                linkedin_url = EXCLUDED.linkedin_url,
+                twitter_url  = EXCLUDED.twitter_url
         """, (email,
               fields['startup_name'], fields['bio'], fields['industry'],
               fields['location'],     fields['website_url'],

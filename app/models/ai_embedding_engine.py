@@ -44,8 +44,8 @@ def save_entrepreneur_embedding(email, profile, pitch):
         cursor.execute("""
             INSERT INTO user_embeddings (email, role, embedding, updated_at)
             VALUES (%s, %s, %s, NOW())
-            ON DUPLICATE KEY UPDATE
-                embedding = VALUES(embedding),
+            ON CONFLICT (email) DO UPDATE SET
+                embedding = EXCLUDED.embedding,
                 updated_at = NOW()
         """, (email, 'entrepreneur', json.dumps(embedding)))
         conn.commit()
@@ -74,8 +74,8 @@ def save_investor_embedding(email, profile):
         cursor.execute("""
             INSERT INTO user_embeddings (email, role, embedding, updated_at)
             VALUES (%s, %s, %s, NOW())
-            ON DUPLICATE KEY UPDATE
-                embedding = VALUES(embedding),
+            ON CONFLICT (email) DO UPDATE SET
+                embedding = EXCLUDED.embedding,
                 updated_at = NOW()
         """, (email, 'investor', json.dumps(embedding)))
         conn.commit()

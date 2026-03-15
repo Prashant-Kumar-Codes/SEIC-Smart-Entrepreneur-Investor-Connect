@@ -243,9 +243,9 @@ def express_interest():
             INSERT INTO investor_interests
                 (investor_email, entrepreneur_email, status, message)
             VALUES (%s, %s, 'pending', %s)
-            ON DUPLICATE KEY UPDATE
+            ON CONFLICT (investor_email, entrepreneur_email) DO UPDATE SET
                 status  = 'pending',
-                message = VALUES(message)
+                message = EXCLUDED.message
         """, (investor_email, entrepreneur_email, message or None))
 
         # Optionally notify the entrepreneur
@@ -288,8 +288,9 @@ def save_startup():
         mycon  = get_db_connection()
         cursor = mycon.cursor()
         cursor.execute("""
-            INSERT IGNORE INTO saved_startups (investor_email, entrepreneur_email)
+            INSERT INTO saved_startups (investor_email, entrepreneur_email)
             VALUES (%s, %s)
+            ON CONFLICT DO NOTHING
         """, (investor_email, entrepreneur_email))
         mycon.commit()
         cursor.close()
@@ -325,9 +326,9 @@ def request_connection():
             INSERT INTO connections
                 (entrepreneur_email, investor_email, status, requested_by)
             VALUES (%s, %s, 'pending', %s)
-            ON DUPLICATE KEY UPDATE
+            ON CONFLICT (entrepreneur_email, investor_email) DO UPDATE SET
                 status       = 'pending',
-                requested_by = VALUES(requested_by)
+                requested_by = EXCLUDED.requested_by
         """, (entrepreneur_email, investor_email, entrepreneur_email))
 
         # Notify the investor
@@ -370,8 +371,9 @@ def save_investor():
         mycon  = get_db_connection()
         cursor = mycon.cursor()
         cursor.execute("""
-            INSERT IGNORE INTO saved_investors (entrepreneur_email, investor_email)
+            INSERT INTO saved_investors (entrepreneur_email, investor_email)
             VALUES (%s, %s)
+            ON CONFLICT DO NOTHING
         """, (entrepreneur_email, investor_email))
         mycon.commit()
         cursor.close()

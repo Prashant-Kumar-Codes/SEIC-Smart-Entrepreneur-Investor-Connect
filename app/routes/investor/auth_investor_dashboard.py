@@ -553,8 +553,9 @@ def interact_post(post_id):
         cursor = mycon.cursor()
 
         cursor.execute("""
-            INSERT IGNORE INTO post_interactions (user_email, post_id, interaction_type)
+            INSERT INTO post_interactions (user_email, post_id, interaction_type)
             VALUES (%s, %s, %s)
+            ON CONFLICT DO NOTHING
         """, (email, post_id, interaction_type))
 
         toggled = cursor.rowcount > 0
@@ -938,9 +939,9 @@ def express_interest():
             INSERT INTO investor_interests (
                 investor_email, entrepreneur_email, status, message, created_at
             ) VALUES (%s, %s, %s, %s, NOW())
-            ON DUPLICATE KEY UPDATE
-                status = VALUES(status),
-                message = VALUES(message),
+            ON CONFLICT (investor_email, entrepreneur_email) DO UPDATE SET
+                status = EXCLUDED.status,
+                message = EXCLUDED.message,
                 updated_at = NOW()
         """, (investor_email, entrepreneur_email, 'pending', message))
         
@@ -950,7 +951,7 @@ def express_interest():
                 INSERT INTO saved_startups (
                     investor_email, entrepreneur_email, saved_at
                 ) VALUES (%s, %s, NOW())
-                ON DUPLICATE KEY UPDATE
+                ON CONFLICT (investor_email, entrepreneur_email) DO UPDATE SET
                     saved_at = NOW()
             """, (investor_email, entrepreneur_email))
         except Exception:
@@ -1004,11 +1005,11 @@ def propose_investment():
                 deal_stage, deal_value, equity_offered,
                 notes, created_at
             ) VALUES (%s, %s, %s, %s, %s, %s, NOW())
-            ON DUPLICATE KEY UPDATE
+            ON CONFLICT (entrepreneur_email, investor_email) DO UPDATE SET
                 deal_stage = 'in_discussion',
-                deal_value = VALUES(deal_value),
-                equity_offered = VALUES(equity_offered),
-                notes = VALUES(notes),
+                deal_value = EXCLUDED.deal_value,
+                equity_offered = EXCLUDED.equity_offered,
+                notes = EXCLUDED.notes,
                 updated_at = NOW()
         """, (
             entrepreneur_email, investor_email,
@@ -1028,9 +1029,9 @@ def propose_investment():
             SELECT %s, %s, ep.startup_name, %s, %s, CURDATE(), %s, %s, %s
             FROM entrepreneur_profile ep
             WHERE ep.email = %s
-            ON DUPLICATE KEY UPDATE
-                investment_amount = VALUES(investment_amount),
-                equity_percentage = VALUES(equity_percentage),
+            ON CONFLICT (investor_email, entrepreneur_email) DO UPDATE SET
+                investment_amount = EXCLUDED.investment_amount,
+                equity_percentage = EXCLUDED.equity_percentage,
                 updated_at = NOW()
         """, (
             investor_email, entrepreneur_email, investment_amount, 
@@ -1106,7 +1107,7 @@ def post_meeting_decision(meeting_id):
                     entrepreneur_email, investor_email,
                     deal_stage, status, created_at
                 ) VALUES (%s, %s, %s, %s, NOW())
-                ON DUPLICATE KEY UPDATE
+                ON CONFLICT (entrepreneur_email, investor_email) DO UPDATE SET
                     deal_stage = 'in_discussion',
                     updated_at = NOW()
             """, (entrepreneur_email, investor_email, 'introduced', 'active'))
@@ -1153,8 +1154,8 @@ def save_startup():
             INSERT INTO saved_startups (
                 investor_email, entrepreneur_email, notes, saved_at
             ) VALUES (%s, %s, %s, NOW())
-            ON DUPLICATE KEY UPDATE
-                notes = VALUES(notes)
+            ON CONFLICT (investor_email, entrepreneur_email) DO UPDATE SET
+                notes = EXCLUDED.notes
         """, (investor_email, entrepreneur_email, notes))
         
         mycon.commit()

@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, session, flash, redirect, url_for, jsonify
 from flask_mail import Mail, Message
-import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import random
 import os
+import psycopg2
 
 # ============================================================
 # mail lives HERE — import it as:  from .extensions import mail
@@ -15,14 +15,42 @@ mail = Mail()
 
 
 def get_db_connection():
-    conn = mysql.connector.connect(
-        host     = os.getenv("MYSQL_HOST"),
-        user     = os.getenv("MYSQL_USER"),
-        password = os.getenv("MYSQL_PASSWORD"),
-        database = os.getenv("MYSQL_DATABASE")
-    )
-    print(f"🗄 DB connected → host={os.getenv('MYSQL_HOST')} db={os.getenv('MYSQL_DATABASE')}")
-    return conn
+    """Get PostgreSQL connection using DATABASE_URL or individual parameters"""
+    try:
+        # Try using DATABASE_URL first (preferred)
+        database_url = os.getenv("DATABASE_URL")
+        if database_url:
+            # Extract connection parameters from DATABASE_URL
+            # Format: postgresql://user:password@host:port/database
+            from urllib.parse import urlparse
+            parsed = urlparse(database_url)
+            conn = psycopg2.connect(
+                host     = parsed.hostname,
+                port     = parsed.port or 5432,
+                user     = parsed.username,
+                password = parsed.password,
+                database = parsed.path.lstrip('/'),
+                sslmode  = 'require' if 'render' in (parsed.hostname or '') else 'prefer'
+            )
+            print(f"🗄 DB connected via DATABASE_URL → {parsed.hostname}")
+            return conn
+    except Exception as e:
+        print(f"⚠️  DATABASE_URL parsing failed: {e}. Falling back to individual parameters.")
+    
+    # Fallback to individual parameters
+    try:
+        conn = psycopg2.connect(
+            host     = os.getenv("POSTGRES_HOST"),
+            port     = int(os.getenv("POSTGRES_PORT", 5432)),
+            user     = os.getenv("POSTGRES_USER"),
+            password = os.getenv("POSTGRES_PASSWORD"),
+            database = os.getenv("POSTGRES_DATABASE")
+        )
+        print(f"🗄 DB connected → host={os.getenv('POSTGRES_HOST')} db={os.getenv('POSTGRES_DATABASE')}")
+        return conn
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        raise
 
 
 def get_unread_count(email):

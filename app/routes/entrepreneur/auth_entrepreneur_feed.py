@@ -279,8 +279,9 @@ def interact_post(post_id):
 
         # Upsert interaction (ignore duplicate)
         cursor.execute("""
-            INSERT IGNORE INTO post_interactions (user_email, post_id, interaction_type)
+            INSERT INTO post_interactions (user_email, post_id, interaction_type)
             VALUES (%s, %s, %s)
+            ON CONFLICT DO NOTHING
         """, (email, post_id, interaction_type))
 
         toggled = cursor.rowcount > 0   # 1 = new interaction, 0 = already existed
@@ -333,14 +334,14 @@ def edit_profile():
             INSERT INTO entrepreneur_profile
                 (email, startup_name, bio, industry, location, website_url, linkedin_url, twitter_url)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                startup_name = VALUES(startup_name),
-                bio          = VALUES(bio),
-                industry     = VALUES(industry),
-                location     = VALUES(location),
-                website_url  = VALUES(website_url),
-                linkedin_url = VALUES(linkedin_url),
-                twitter_url  = VALUES(twitter_url)
+            ON CONFLICT (email) DO UPDATE SET
+                startup_name = EXCLUDED.startup_name,
+                bio          = EXCLUDED.bio,
+                industry     = EXCLUDED.industry,
+                location     = EXCLUDED.location,
+                website_url  = EXCLUDED.website_url,
+                linkedin_url = EXCLUDED.linkedin_url,
+                twitter_url  = EXCLUDED.twitter_url
         """, (email,
               fields['startup_name'], fields['bio'], fields['industry'],
               fields['location'],     fields['website_url'],
@@ -397,26 +398,26 @@ def edit_profile_full():
                 funding_progress_pct, funding_required,
                 pitch_deck_url, demo_url, video_pitch_url
             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            ON DUPLICATE KEY UPDATE
-                startup_name        = VALUES(startup_name),
-                bio                 = VALUES(bio),
-                industry            = VALUES(industry),
-                location            = VALUES(location),
-                website_url         = VALUES(website_url),
-                linkedin_url        = VALUES(linkedin_url),
-                twitter_url         = VALUES(twitter_url),
-                stage               = VALUES(stage),
-                founded_year        = VALUES(founded_year),
-                team_size           = VALUES(team_size),
-                focus_areas         = VALUES(focus_areas),
-                funding_amount      = VALUES(funding_amount),
-                funding_currency    = VALUES(funding_currency),
-                use_of_funds        = VALUES(use_of_funds),
-                funding_progress_pct= VALUES(funding_progress_pct),
-                funding_required    = VALUES(funding_required),
-                pitch_deck_url      = VALUES(pitch_deck_url),
-                demo_url            = VALUES(demo_url),
-                video_pitch_url     = VALUES(video_pitch_url)
+            ON CONFLICT (email) DO UPDATE SET
+                startup_name        = EXCLUDED.startup_name,
+                bio                 = EXCLUDED.bio,
+                industry            = EXCLUDED.industry,
+                location            = EXCLUDED.location,
+                website_url         = EXCLUDED.website_url,
+                linkedin_url        = EXCLUDED.linkedin_url,
+                twitter_url         = EXCLUDED.twitter_url,
+                stage               = EXCLUDED.stage,
+                founded_year        = EXCLUDED.founded_year,
+                team_size           = EXCLUDED.team_size,
+                focus_areas         = EXCLUDED.focus_areas,
+                funding_amount      = EXCLUDED.funding_amount,
+                funding_currency    = EXCLUDED.funding_currency,
+                use_of_funds        = EXCLUDED.use_of_funds,
+                funding_progress_pct= EXCLUDED.funding_progress_pct,
+                funding_required    = EXCLUDED.funding_required,
+                pitch_deck_url      = EXCLUDED.pitch_deck_url,
+                demo_url            = EXCLUDED.demo_url,
+                video_pitch_url     = EXCLUDED.video_pitch_url
         """, (
             email,
             data.get('startup_name','').strip()  or None,

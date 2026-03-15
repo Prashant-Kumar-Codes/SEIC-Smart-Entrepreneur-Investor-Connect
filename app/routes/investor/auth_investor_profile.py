@@ -72,8 +72,9 @@ def investor_my_profile(investor_email=None):
             mycon  = get_db_connection()
             cursor = mycon.cursor()
             cursor.execute("""
-                INSERT IGNORE INTO investor_profiles (email)
+                INSERT INTO investor_profiles (email)
                 VALUES (%s)
+                ON CONFLICT DO NOTHING
             """, (email,))
             mycon.commit()
             cursor.close(); mycon.close()
@@ -163,21 +164,21 @@ def edit_investor_profile():
                 %s,
                 %s, %s, %s, %s
             )
-            ON DUPLICATE KEY UPDATE
-                full_name                  = VALUES(full_name),
-                bio                        = VALUES(bio),
-                investor_type              = VALUES(investor_type),
-                location                   = VALUES(location),
-                geography                  = VALUES(geography),
-                current_position           = VALUES(current_position),
-                firm_name                  = VALUES(firm_name),
-                years_of_experience        = VALUES(years_of_experience),
-                education                  = VALUES(education),
-                previous_roles             = VALUES(previous_roles),
-                investment_focus           = VALUES(investment_focus),
-                website_url                = VALUES(website_url),
-                linkedin_url               = VALUES(linkedin_url),
-                twitter_url                = VALUES(twitter_url),
+            ON CONFLICT (email) DO UPDATE SET
+                full_name                  = EXCLUDED.full_name,
+                bio                        = EXCLUDED.bio,
+                investor_type              = EXCLUDED.investor_type,
+                location                   = EXCLUDED.location,
+                geography                  = EXCLUDED.geography,
+                current_position           = EXCLUDED.current_position,
+                firm_name                  = EXCLUDED.firm_name,
+                years_of_experience        = EXCLUDED.years_of_experience,
+                education                  = EXCLUDED.education,
+                previous_roles             = EXCLUDED.previous_roles,
+                investment_focus           = EXCLUDED.investment_focus,
+                website_url                = EXCLUDED.website_url,
+                linkedin_url               = EXCLUDED.linkedin_url,
+                twitter_url                = EXCLUDED.twitter_url,
                 crunchbase_url             = VALUES(crunchbase_url)
         """, (
             email,
@@ -214,15 +215,15 @@ def edit_investor_profile():
                 %s, %s,
                 %s, %s
             )
-            ON DUPLICATE KEY UPDATE
-                preferred_sectors          = VALUES(preferred_sectors),
-                investment_stage           = VALUES(investment_stage),
-                investment_thesis          = VALUES(investment_thesis),
-                portfolio_highlights       = VALUES(portfolio_highlights),
-                min_ticket_size            = VALUES(min_ticket_size),
-                max_ticket_size            = VALUES(max_ticket_size),
-                available_funds            = VALUES(available_funds),
-                investment_utilization_pct = VALUES(investment_utilization_pct)
+            ON CONFLICT (email) DO UPDATE SET
+                preferred_sectors          = EXCLUDED.preferred_sectors,
+                investment_stage           = EXCLUDED.investment_stage,
+                investment_thesis          = EXCLUDED.investment_thesis,
+                portfolio_highlights       = EXCLUDED.portfolio_highlights,
+                min_ticket_size            = EXCLUDED.min_ticket_size,
+                max_ticket_size            = EXCLUDED.max_ticket_size,
+                available_funds            = EXCLUDED.available_funds,
+                investment_utilization_pct = EXCLUDED.investment_utilization_pct
         """, (
             email,
             data.get('preferred_sectors','').strip() or None,

@@ -1,15 +1,19 @@
--- create database seic_db;
+-- ⚠️  DEPRECATED: This file contains MySQL syntax
+-- ✅  Please use: app/database/all_schemas_postgresql.sql (PostgreSQL version)
+-- 📋 See: app/database/MIGRATION_SUMMARY.txt for detailed changes
+
+create database seic_db;
 use seic_db;
 
 
 -- ═════════════════════════════════════════════════════════════════════════════
--- EISC DATABASE SCHEMA
--- A complete, clean, and efficient schema for the EISC platform
--- Run these commands in order in your MySQL client
+-- SEIC DATABASE SCHEMA (MYSQL VERSION - DEPRECATED)
+-- A complete, clean, and efficient schema for the SEIC platform
+-- ⚠️  FOR REFERENCE ONLY - Use PostgreSQL version for new deployments
 -- ═════════════════════════════════════════════════════════════════════════════
 
--- CREATE DATABASE IF NOT EXISTS eisc_db;
--- USE eisc_db;
+-- CREATE DATABASE IF NOT EXISTS seic_db;
+-- USE seic_db;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1. LOGIN_DATA
@@ -149,6 +153,7 @@ CREATE TABLE IF NOT EXISTS user_posts (
     INDEX idx_active (is_active)
 );
 
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 5. INVESTOR_PROFILES
 -- Extended profile for investors
@@ -230,7 +235,7 @@ CREATE TABLE IF NOT EXISTS post_interactions (
     created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_interaction (user_email, post_id, interaction_type),
     CONSTRAINT fk_pi_user FOREIGN KEY (user_email) REFERENCES login_data(email) ON DELETE CASCADE,
-    CONSTRAINT fk_pi_post FOREIGN KEY (post_id) REFERENCES user_posts(post_id) ON DELETE CASCADE,
+    CONSTRAINT fk_pi_post FOREIGN KEY (post_id) REFERENCES pitch_posts(post_id) ON DELETE CASCADE,
     INDEX idx_user_email (user_email),
     INDEX idx_post_id (post_id)
 );
@@ -246,7 +251,7 @@ CREATE TABLE IF NOT EXISTS post_comments (
     comment_text        TEXT NOT NULL,
     parent_comment_id   INT DEFAULT NULL,
     created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pcm_post FOREIGN KEY (post_id) REFERENCES user_posts(post_id) ON DELETE CASCADE,
+    CONSTRAINT fk_pcm_post FOREIGN KEY (post_id) REFERENCES pitch_posts(post_id) ON DELETE CASCADE,
     CONSTRAINT fk_pcm_email FOREIGN KEY (email) REFERENCES login_data(email) ON DELETE CASCADE,
     CONSTRAINT fk_pcm_parent FOREIGN KEY (parent_comment_id) REFERENCES post_comments(comment_id) ON DELETE SET NULL,
     INDEX idx_post_id (post_id),
@@ -298,7 +303,7 @@ CREATE TABLE IF NOT EXISTS saved_posts (
     saved_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_saved_post (user_email, post_id),
     CONSTRAINT fk_sp_user FOREIGN KEY (user_email) REFERENCES login_data(email) ON DELETE CASCADE,
-    CONSTRAINT fk_sp_post FOREIGN KEY (post_id) REFERENCES user_posts(post_id) ON DELETE CASCADE,
+    CONSTRAINT fk_sp_post FOREIGN KEY (post_id) REFERENCES pitch_posts(post_id) ON DELETE CASCADE,
     INDEX idx_user (user_email, saved_at DESC),
     INDEX idx_post (post_id)
 );

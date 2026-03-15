@@ -360,21 +360,21 @@ def save_portfolio():
                 %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s
             )
-            ON DUPLICATE KEY UPDATE
-                investment_thesis    = VALUES(investment_thesis),
-                deal_criteria        = VALUES(deal_criteria),
-                portfolio_highlights = VALUES(portfolio_highlights),
-                sector_expertise     = VALUES(sector_expertise),
-                dd_framework         = VALUES(dd_framework),
-                value_add            = VALUES(value_add),
-                exit_strategy        = VALUES(exit_strategy),
-                co_investment        = VALUES(co_investment),
-                preferred_sectors    = VALUES(preferred_sectors),
-                investment_stage     = VALUES(investment_stage),
-                min_ticket_size      = VALUES(min_ticket_size),
-                max_ticket_size      = VALUES(max_ticket_size),
-                available_funds      = VALUES(available_funds),
-                investment_utilization_pct = VALUES(investment_utilization_pct),
+            ON CONFLICT (email) DO UPDATE SET
+                investment_thesis    = EXCLUDED.investment_thesis,
+                deal_criteria        = EXCLUDED.deal_criteria,
+                portfolio_highlights = EXCLUDED.portfolio_highlights,
+                sector_expertise     = EXCLUDED.sector_expertise,
+                dd_framework         = EXCLUDED.dd_framework,
+                value_add            = EXCLUDED.value_add,
+                exit_strategy        = EXCLUDED.exit_strategy,
+                co_investment        = EXCLUDED.co_investment,
+                preferred_sectors    = EXCLUDED.preferred_sectors,
+                investment_stage     = EXCLUDED.investment_stage,
+                min_ticket_size      = EXCLUDED.min_ticket_size,
+                max_ticket_size      = EXCLUDED.max_ticket_size,
+                available_funds      = EXCLUDED.available_funds,
+                investment_utilization_pct = EXCLUDED.investment_utilization_pct,
                 updated_at           = NOW()
         """, (
             email,

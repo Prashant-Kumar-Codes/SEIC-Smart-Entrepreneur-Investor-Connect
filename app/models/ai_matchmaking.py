@@ -113,8 +113,8 @@ def store_embedding(email: str, role: str, text: str, db_connection) -> bool:
             cursor.execute("""
                 INSERT INTO user_embeddings (email, role, embedding, updated_at)
                 VALUES (%s, %s, %s, NOW())
-                ON DUPLICATE KEY UPDATE
-                    embedding  = VALUES(embedding),
+                ON CONFLICT (email) DO UPDATE SET
+                    embedding  = EXCLUDED.embedding,
                     updated_at = NOW()
             """, (email, role, embedding_json))
             db_connection.commit()
