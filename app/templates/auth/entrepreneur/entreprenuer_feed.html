@@ -23,6 +23,13 @@
 
     <!-- TOP BAR -->
     <header class="topbar">
+        <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Menu" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
         <div class="topbar-titles">
             <div class="topbar-page-title">Pitch <span>Feed</span></div>
             <div class="topbar-subtitle">Discover startups and share your ideas with investors.</div>
@@ -563,6 +570,7 @@
 
 
 <div class="toast-container" id="toastContainer"></div>
+<script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
 <script src="{{ url_for('static', filename='js/entrepreneur_dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/enterpreneur_feed..js') }}"></script>
 </body>

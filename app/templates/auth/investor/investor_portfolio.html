@@ -21,6 +21,11 @@
             <div class="topbar-subtitle">Define your investment identity. Use AI to sharpen your thesis and process.</div>
         </div>
         <div class="topbar-actions">
+            <button class="topbar-icon-btn sidebar-toggle-btn" id="sidebarToggleBtn" type="button" aria-label="Toggle Sidebar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
             <button class="topbar-icon-btn" onclick="showToast('Notifications coming soon!','default')">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -579,5 +584,6 @@
     const INV_FULL_NAME = {{ (profile.full_name or profile.username or 'Investor') | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/investor/investor_dashboard.js') }}"></script>
-<script src="{{ url_for('static', filename='js/investor/investor_portfolio.js') }}"></script><script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script></body>
+<script src="{{ url_for('static', filename='js/investor/investor_portfolio.js') }}"></script><script src="{{ url_for('static', filename='js/sidebar-mobile.js') }}"></script>
+</body>
 </html>
