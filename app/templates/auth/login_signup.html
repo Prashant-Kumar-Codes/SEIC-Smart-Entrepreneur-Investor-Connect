@@ -336,6 +336,9 @@
                 if (data.success) {
                     showToast(data.message, 'success');
                     setTimeout(() => window.location.href = '/verify', 1800);
+                } else if (data.redirect_to_verify) {
+                    showToast(data.message, 'warning');
+                    setTimeout(() => window.location.href = '/verify', 1800);
                 } else {
                     showToast(data.message || 'Sign up failed. Please try again.', 'error');
                 }

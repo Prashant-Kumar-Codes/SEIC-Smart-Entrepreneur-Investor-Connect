@@ -128,25 +128,21 @@ def resend_otp():
 
         mycon  = get_db_connection()
         cursor = mycon.cursor()
-        cursor.execute("UPDATE login_data SET otp = %s, otp_created_at = NOW() WHERE email = %s", (otp, email))
+        cursor.execute("UPDATE login_data SET otp = %s, otp_created_at = %s WHERE email = %s", (otp, datetime.utcnow(), email))
         mycon.commit()
         cursor.close(); mycon.close()
         print(f"🗄 New OTP saved for {email}")
 
         try:
             send_otp_email(email, otp, username)
-            flash('New OTP sent to your email!', 'success')
+            return jsonify({'success': True, 'message': 'New OTP sent to your email!'})
         except Exception as e:
             print(f"[WARNING] Email send failed: {e}")
-            flash('Failed to send email. Please try again.', 'error')
-
-        return redirect(url_for('login_signup_auth.verify_page'))
+            return jsonify({'success': False, 'message': 'Failed to send email. Please check your internet or try again later.'}), 500
 
     except Exception as e:
         print(f"❌ Resend OTP error: {e}")
-        import traceback; traceback.print_exc()
-        flash('An error occurred. Please try again.', 'error')
-        return redirect(url_for('login_signup_auth.verify_page'))
+        return jsonify({'success': False, 'message': 'An error occurred. Please try again.'}), 500
 
 
 # =====================================================================
@@ -311,8 +307,8 @@ def signup():
         # Fresh signup — insert user (with authorized = 'not_authorized' by default)
         cursor.execute(
             """INSERT INTO login_data (username, email, age, gender, role, password, otp, otp_created_at, is_verified, authorized)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), false, 'not_authorized')""",
-            (username, email, age, gender, role, hashed_password, otp)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, false, 'not_authorized')""",
+            (username, email, age, gender, role, hashed_password, otp, datetime.utcnow())
         )
         mycon.commit()
         cursor.close(); mycon.close()
@@ -324,14 +320,17 @@ def signup():
         try:
             send_otp_email(email, otp, username)
             print(f"[OK] OTP email sent -> {email}")
+            return jsonify({
+                'success': True,
+                'message': 'Account created! Please check your email for the OTP.'
+            }), 201
         except Exception as e:
-            print(f"[WARNING] OTP email failed (user still registered): {e}")
-            import traceback; traceback.print_exc()
-
-        return jsonify({
-            'success': True,
-            'message': 'Account created! Check your email for the OTP.'
-        }), 201
+            print(f"[WARNING] OTP email failed: {e}")
+            return jsonify({
+                'success': True, # Still 201 because user is created, but with a warning
+                'message': 'Account created, but we failed to send the OTP email. Please use the "Resend OTP" button on the next page.',
+                'redirect_to_verify': True
+            }), 201
 
     except Exception as e:
         print(f"❌ Signup error: {e}")

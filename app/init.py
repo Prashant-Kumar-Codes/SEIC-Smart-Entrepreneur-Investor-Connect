@@ -18,7 +18,7 @@ def create_app():
     # Initialise mail with the app (mail object lives in extensions.py)
     mail.init_app(app)
     print("[OK] Flask-Mail initialised")
-    print('hello')
+    print('Inside Init App')
 
     # # Getting the embedding model
     # from app.models.ai_matchmaking import get_embedding_model
@@ -64,6 +64,7 @@ def create_app():
     
     from app.routes.auth_match import match_auth
     app.register_blueprint(match_auth)
+
 
     # Admin Verification Blueprint
     from app.routes.admin.auth_admin_verification import admin_verification

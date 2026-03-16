@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Verify OTP - AQI Smart Health Advisor{% endblock %}
+{% block title %}Verify OTP - SEIC{% endblock %}
 
 {% block style %}
 {{ super() }}
@@ -14,7 +14,7 @@
     <div class="verify-content">
         <div class="logo-section">
             <div class="logo-icon">
-                <img src="{{ url_for('static', filename='images/app_logo.png') }}" alt="AQI Logo" class="logo-image">
+                <img src="{{ url_for('static', filename='images/app_logo.png') }}" alt="SEIC Logo" class="logo-image">
             </div>
             <div class="logo-text">Smart Entrepreneur Investor Connect</div>
         </div>
@@ -187,13 +187,22 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
-        .then(response => {
-            startTimer();
-            otpInput.value = '';
-            otpInput.focus();
-            window.location.reload();
+        .then(async response => {
+            const data = await response.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                timeLeft = 60;
+                startTimer();
+                otpInput.value = '';
+                otpInput.focus();
+            } else {
+                showToast(data.message || 'Failed to resend OTP.', 'error');
+                resendBtn.disabled = false;
+                resendText.textContent = 'Resend OTP';
+            }
         })
         .catch(error => {
+            showToast('Network error. Please try again.', 'error');
             resendBtn.disabled = false;
             resendText.textContent = 'Resend OTP';
         });
