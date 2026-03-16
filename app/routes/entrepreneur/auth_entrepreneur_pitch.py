@@ -15,7 +15,7 @@ def pitch_deck_page():
     print(f"📄 Pitch Deck → {email}")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
     # Profile (for sidebar)
     cursor.execute("""
@@ -153,7 +153,7 @@ def save_pitch():
 
     try:
         mycon  = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
         
         # Save pitch content
         cursor.execute("""

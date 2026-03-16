@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import random
 import os
 import psycopg2
+from psycopg2.extras import RealDictCursor
 
 # ============================================================
 # mail lives HERE — import it as:  from .extensions import mail
@@ -56,7 +57,7 @@ def get_db_connection():
 def get_unread_count(email):
     mycon  = get_db_connection()
     cursor = mycon.cursor()
-    cursor.execute("SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = 0", (email,))
+    cursor.execute("SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = false", (email,))
     count = cursor.fetchone()[0]
     cursor.close(); mycon.close()
     return count
@@ -65,7 +66,7 @@ def get_unread_count(email):
 def get_notification_count(email):
     mycon  = get_db_connection()
     cursor = mycon.cursor()
-    cursor.execute("SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = 0", (email,))
+    cursor.execute("SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = false", (email,))
     count = cursor.fetchone()[0]
     cursor.close(); mycon.close()
     return count

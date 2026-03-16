@@ -1,5 +1,6 @@
 import json
 import logging
+from psycopg2.extras import RealDictCursor
 from ..routes.extensions import get_gemini_client
 from google.genai import types
 
@@ -12,7 +13,7 @@ def get_entrepreneur_data_for_scoring(email: str, db_connection) -> dict:
     Returns empty dict if no data found.
     """
     try:
-        cursor = db_connection.cursor(dictionary=True)
+        cursor = db_connection.cursor(cursor_factory=RealDictCursor)
 
         # Fetch entrepreneur profile
         cursor.execute("SELECT * FROM entrepreneur_profile WHERE email = %s", (email,))

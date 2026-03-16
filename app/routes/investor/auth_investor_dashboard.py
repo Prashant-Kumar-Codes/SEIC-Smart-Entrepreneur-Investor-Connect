@@ -14,7 +14,7 @@ investor_dashboard_bp = Blueprint('investor_dashboard_bp', __name__)
 def get_investor_profile(email):
     """Get investor profile data"""
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.age, ld.gender,
@@ -36,7 +36,7 @@ def get_investor_profile(email):
 def get_feed_posts(limit=20, offset=0):
     """Get feed posts from entrepreneurs"""
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             pp.post_id, pp.email, pp.title, pp.description,
@@ -61,7 +61,7 @@ def get_feed_posts(limit=20, offset=0):
 def get_message_threads(email):
     """Get message threads for investor"""
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             m.message_id,
@@ -93,7 +93,7 @@ def get_unread_count(email):
     """Get unread messages count"""
     mycon = get_db_connection()
     cursor = mycon.cursor()
-    cursor.execute("SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = 0", (email,))
+    cursor.execute("SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = false", (email,))
     count = cursor.fetchone()[0]
     cursor.close(); mycon.close()
     return count
@@ -103,7 +103,7 @@ def get_notification_count(email):
     """Get unread notifications count"""
     mycon = get_db_connection()
     cursor = mycon.cursor()
-    cursor.execute("SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = 0", (email,))
+    cursor.execute("SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = false", (email,))
     count = cursor.fetchone()[0]
     cursor.close(); mycon.close()
     return count
@@ -112,7 +112,7 @@ def get_notification_count(email):
 def get_interested_startups(investor_email, limit=10):
     """Get startups investor has expressed interest in"""
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ii.interest_id, ii.entrepreneur_email, ii.status, ii.created_at,
@@ -133,7 +133,7 @@ def get_interested_startups(investor_email, limit=10):
 def get_portfolio(investor_email, limit=10):
     """Get investor's investment portfolio"""
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
             SELECT
@@ -156,7 +156,7 @@ def get_portfolio(investor_email, limit=10):
 def get_saved_startups(investor_email, limit=10):
     """Get investor's saved startups"""
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ss.save_id, ss.saved_at, ss.notes,
@@ -177,7 +177,7 @@ def get_saved_startups(investor_email, limit=10):
 def get_matched_entrepreneurs(investor_email, limit=6):
     """Get entrepreneurs matching investor's focus areas"""
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     try:
         # Get investor's investment focus
         cursor.execute("""
@@ -216,7 +216,7 @@ def get_deal_counts(investor_email):
     deal_counts.introduced, deal_counts.values()|sum, etc.
     """
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT deal_stage, COUNT(*) AS cnt
         FROM deals
@@ -259,7 +259,7 @@ def get_top_startups(investor_email, limit=5):
         ai_match_score    (from ai_match_cache, falls back to 0)
     """
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
     # Get investor focus to filter
     cursor.execute(
@@ -312,7 +312,7 @@ def get_top_startups(investor_email, limit=5):
 def get_upcoming_meetings(investor_email, limit=3):
     """Fetch scheduled meetings for the investor, newest first."""
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             m.meeting_id,
@@ -607,7 +607,7 @@ def discover_startups():
     print(f"🔍 Discover Startups → {email}")
     
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     
     query = """
         SELECT
@@ -720,7 +720,7 @@ def view_deals():
     print(f"📊 Deals → {email}")
     
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     
     # Get all deals for investor
     cursor.execute("""
@@ -774,7 +774,7 @@ def view_meetings():
     print(f"📅 Meetings → {email}")
     
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     
     cursor.execute("""
         SELECT

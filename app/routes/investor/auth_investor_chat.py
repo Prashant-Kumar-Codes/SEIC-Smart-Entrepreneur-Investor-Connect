@@ -45,7 +45,7 @@ def investor_chat_page():
     print(f"💎 Investor AI Chat → {email}")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
     # ── Investor full profile (for AI context + sidebar) ──────────
     cursor.execute("""
@@ -114,7 +114,7 @@ def investor_list_sessions():
 
     try:
         mycon  = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
             SELECT
                 s.session_id,
@@ -165,7 +165,7 @@ def investor_chat_history():
 
     try:
         mycon  = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
             SELECT role, content, created_at
             FROM inv_chat_messages
@@ -217,7 +217,7 @@ def investor_send_message():
         from google.genai import types
 
         mycon  = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
         # ── Load investor profile ──────────────────────────────────
         cursor.execute("""

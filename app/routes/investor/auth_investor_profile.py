@@ -23,7 +23,7 @@ def investor_my_profile(investor_email=None):
     print(f"[PROFILE] Investor Profile -> {email} (self? {viewing_self})")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email,
@@ -179,7 +179,7 @@ def edit_investor_profile():
                 website_url                = EXCLUDED.website_url,
                 linkedin_url               = EXCLUDED.linkedin_url,
                 twitter_url                = EXCLUDED.twitter_url,
-                crunchbase_url             = VALUES(crunchbase_url)
+                crunchbase_url             = EXCLUDED.crunchbase_url
         """, (
             email,
             data.get('full_name','').strip()         or None,
@@ -245,7 +245,7 @@ def edit_investor_profile():
         # Async embedding – load fresh rows and hand off to matcher
         try:
             conn2 = get_db_connection()
-            cur2 = conn2.cursor(dictionary=True)
+            cur2 = conn2.cursor(cursor_factory=RealDictCursor)
             cur2.execute("SELECT * FROM investor_profiles WHERE email = %s", (email,))
             investor_profile = cur2.fetchone() or {}
             cur2.execute("SELECT * FROM investor_portfolio_profile WHERE email = %s", (email,))

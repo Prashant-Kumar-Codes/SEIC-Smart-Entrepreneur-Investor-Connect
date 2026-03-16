@@ -10,7 +10,7 @@ entrepreneur_feed_auth = Blueprint('entrepreneur_feed_auth', __name__)
 def get_entrepreneur_profile(email):
     """Fetch joined entrepreneur profile + login_data row."""
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.age, ld.gender,
@@ -31,7 +31,7 @@ def get_entrepreneur_profile(email):
 def get_feed_posts(limit=20, offset=0):
     """Fetch pitch feed with author info, newest first."""
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             pp.post_id, pp.email, pp.title, pp.description,
@@ -57,7 +57,7 @@ def get_feed_posts(limit=20, offset=0):
 def get_message_threads(email):
     """Get latest message per conversation partner for inbox sidebar."""
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             m.message_id,
@@ -103,7 +103,7 @@ def get_unread_count(email):
     mycon  = get_db_connection()
     cursor = mycon.cursor()
     cursor.execute(
-        "SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = 0",
+        "SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = false",
         (email,)
     )
     count = cursor.fetchone()[0]
@@ -117,7 +117,7 @@ def get_notification_count(email):
     mycon  = get_db_connection()
     cursor = mycon.cursor()
     cursor.execute(
-        "SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = 0",
+        "SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = false",
         (email,)
     )
     count = cursor.fetchone()[0]
@@ -128,7 +128,7 @@ def get_notification_count(email):
 def get_profile_data(email):
     """Fetch complete entrepreneur profile."""
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.created_at,
@@ -504,8 +504,8 @@ def mark_messages_read():
         cursor = mycon.cursor()
         cursor.execute("""
             UPDATE messages
-            SET is_read = 1, read_at = NOW()
-            WHERE receiver_email = %s AND sender_email = %s AND is_read = 0
+            SET is_read = true, read_at = NOW()
+            WHERE receiver_email = %s AND sender_email = %s AND is_read = false
         """, (email, partner_email))
         mycon.commit()
         cursor.close()

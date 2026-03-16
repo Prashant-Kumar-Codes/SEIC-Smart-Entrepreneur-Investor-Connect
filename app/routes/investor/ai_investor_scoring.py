@@ -6,7 +6,7 @@ def get_investor_data_for_scoring(email: str, db_connection) -> dict:
     """
     Fetch and structure investor profile and portfolio data for scoring.
     """
-    cursor = db_connection.cursor(dictionary=True)
+    cursor = db_connection.cursor(cursor_factory=RealDictCursor)
 
     # Fetch investor profile
     cursor.execute("SELECT * FROM investor_profiles WHERE email = %s", (email,))

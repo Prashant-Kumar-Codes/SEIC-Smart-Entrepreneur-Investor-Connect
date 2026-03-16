@@ -2,6 +2,8 @@ import json
 import numpy as np
 from datetime import datetime
 import threading
+from app.routes.extensions import *
+from psycopg2.extras import RealDictCursor
 
 try:
     from sentence_transformers import SentenceTransformer
@@ -239,7 +241,7 @@ def compute_matches_for_investor(investor_email: str, db_connection) -> int:
         10% engagement (views)
     """
     try:
-        cursor = db_connection.cursor(dictionary=True)
+        cursor = db_connection.cursor(cursor_factory=RealDictCursor)
 
         # ── Load investor embedding ────────────────────────────────
         inv_vec = load_embedding(investor_email, cursor)
@@ -413,7 +415,7 @@ def compute_matches_for_entrepreneur(entrepreneur_email: str, db_connection) -> 
         10% investor engagement proxy (total_investments)
     """
     try:
-        cursor = db_connection.cursor(dictionary=True)
+        cursor = db_connection.cursor(cursor_factory=RealDictCursor)
 
         # ── Load entrepreneur embedding ────────────────────────────
         ent_vec = load_embedding(entrepreneur_email, cursor)
@@ -548,7 +550,7 @@ def get_cached_investor_matches(investor_email: str, db_connection, limit: int =
     If cache is empty or stale (>24h), trigger recomputation first.
     """
     try:
-        cursor = db_connection.cursor(dictionary=True)
+        cursor = db_connection.cursor(cursor_factory=RealDictCursor)
 
         # Check if cache exists and is fresh
         cursor.execute("""
@@ -571,7 +573,7 @@ def get_cached_investor_matches(investor_email: str, db_connection, limit: int =
             cursor.close()
             print(f"🔄 Cache miss/stale for investor {investor_email} — recomputing…")
             compute_matches_for_investor(investor_email, db_connection)
-            cursor = db_connection.cursor(dictionary=True)
+            cursor = db_connection.cursor(cursor_factory=RealDictCursor)
 
         # Fetch cached matches + full startup profile in one join
         cursor.execute("""
@@ -622,7 +624,7 @@ def get_cached_entrepreneur_matches(entrepreneur_email: str, db_connection, limi
     Auto-recomputes if cache is empty or stale (>24h).
     """
     try:
-        cursor = db_connection.cursor(dictionary=True)
+        cursor = db_connection.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute("""
             SELECT COUNT(*) AS cnt,
@@ -644,7 +646,7 @@ def get_cached_entrepreneur_matches(entrepreneur_email: str, db_connection, limi
             cursor.close()
             print(f"🔄 Cache miss/stale for entrepreneur {entrepreneur_email} — recomputing…")
             compute_matches_for_entrepreneur(entrepreneur_email, db_connection)
-            cursor = db_connection.cursor(dictionary=True)
+            cursor = db_connection.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute("""
             SELECT

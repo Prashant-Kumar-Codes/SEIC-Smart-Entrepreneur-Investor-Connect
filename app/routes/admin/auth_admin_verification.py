@@ -57,13 +57,13 @@ def verification_dashboard():
     """
     try:
         mycon = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
         
         # Get only unauthorized users who are verified
         cursor.execute("""
             SELECT id, username, email, role, created_at
             FROM login_data 
-            WHERE is_verified = 1 AND authorized = 'not_authorized'
+            WHERE is_verified = true AND authorized = 'not_authorized'
             ORDER BY created_at DESC
         """)
         
@@ -109,7 +109,7 @@ def approve_user():
             return jsonify({'success': False, 'message': 'Email is required.'}), 400
         
         mycon = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
         
         # Check if user exists and is unauthorized
         cursor.execute("SELECT username, role FROM login_data WHERE email = %s", (user_email,))
@@ -159,7 +159,7 @@ def reject_user():
             return jsonify({'success': False, 'message': 'Email is required.'}), 400
         
         mycon = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
         
         # Get user info before deletion
         cursor.execute("SELECT username, role FROM login_data WHERE email = %s", (user_email,))

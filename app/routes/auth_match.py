@@ -32,7 +32,7 @@ def investor_matches():
     print(f"🤝 Investor Matches → {email}")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
     # ── Investor profile (sidebar) ─────────────────────────────
     cursor.execute("""
@@ -108,7 +108,7 @@ def entrepreneur_matches():
     print(f"🤝 Entrepreneur Matches → {email}")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
     # ── Entrepreneur profile (sidebar) ────────────────────────
     cursor.execute("""

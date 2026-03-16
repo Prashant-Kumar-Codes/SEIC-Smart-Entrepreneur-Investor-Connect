@@ -10,7 +10,7 @@ def api_all_investors():
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
     email = session.get('user_email')
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     # Get entrepreneur's embedding (if available)
     cursor.execute("SELECT embedding FROM user_embeddings WHERE email = %s AND role = 'entrepreneur'", (email,))
     row = cursor.fetchone()
@@ -47,7 +47,7 @@ def api_all_entrepreneurs():
     if 'user_id' not in session:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT ep.email, ld.username, ld.is_verified, ep.startup_name, ep.industry, 
                ep.profile_image_url, ep.profile_score, ep.bio, ep.location, ep.stage,
@@ -66,7 +66,7 @@ def api_all_entrepreneurs():
 
 def get_entrepreneur_profile(email):
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.age, ld.gender,
@@ -86,7 +86,7 @@ def get_entrepreneur_profile(email):
 
 def get_feed_posts(limit=20, offset=0):
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             pp.post_id, pp.email, pp.title, pp.description,
@@ -110,7 +110,7 @@ def get_feed_posts(limit=20, offset=0):
 
 def get_message_threads(email):
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             m.message_id,
@@ -141,7 +141,7 @@ def get_message_threads(email):
 def get_unread_count(email):
     mycon  = get_db_connection()
     cursor = mycon.cursor()
-    cursor.execute("SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = 0", (email,))
+    cursor.execute("SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = false", (email,))
     count = cursor.fetchone()[0]
     cursor.close(); mycon.close()
     return count
@@ -150,7 +150,7 @@ def get_unread_count(email):
 def get_notification_count(email):
     mycon  = get_db_connection()
     cursor = mycon.cursor()
-    cursor.execute("SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = 0", (email,))
+    cursor.execute("SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = false", (email,))
     count = cursor.fetchone()[0]
     cursor.close(); mycon.close()
     return count
@@ -165,7 +165,7 @@ def get_top_investors(entrepreneur_email, limit=3):
     Returns only REAL data from database - no padding with placeholder data
     """
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
             SELECT
@@ -181,7 +181,7 @@ def get_top_investors(entrepreneur_email, limit=3):
             LEFT JOIN connections c
                 ON c.investor_email = ip.email
                 AND c.entrepreneur_email = %s
-            WHERE ld.is_verified = 1
+            WHERE ld.is_verified = true
             ORDER BY
                 CASE
                     WHEN c.status = 'accepted' THEN 1
@@ -207,7 +207,7 @@ def get_upcoming_meetings(entrepreneur_email, limit=3):
     Shows only meetings that are scheduled and not cancelled.
     """
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
             SELECT
@@ -241,7 +241,7 @@ def get_deal_counts(entrepreneur_email):
     Returns real counts from the deals table.
     """
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     
     # Initialize all counts to 0
     counts = {
@@ -583,8 +583,8 @@ def mark_messages_read():
         mycon  = get_db_connection()
         cursor = mycon.cursor()
         cursor.execute("""
-            UPDATE messages SET is_read = 1, read_at = NOW()
-            WHERE receiver_email = %s AND sender_email = %s AND is_read = 0
+            UPDATE messages SET is_read = true, read_at = NOW()
+            WHERE receiver_email = %s AND sender_email = %s AND is_read = false
         """, (email, partner_email))
         mycon.commit()
         cursor.close(); mycon.close()
@@ -664,7 +664,7 @@ def entrepreneur_matches():
     print(f"🎯 Investor Matches → {email}")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
     # Profile (for sidebar)
     cursor.execute("""
@@ -711,7 +711,7 @@ def entrepreneur_deals():
     print(f"📊 Entrepreneur Deals → {email}")
     
     mycon = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     
     # Get all deals for entrepreneur
     cursor.execute("""

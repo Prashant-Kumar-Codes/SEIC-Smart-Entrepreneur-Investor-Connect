@@ -19,7 +19,7 @@ def investor_portfolio_page():
     print(f"💼 Investor Portfolio → {email}")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
     # ── 1. Investor base profile (sidebar + topbar avatar) ────
     cursor.execute("""
@@ -404,7 +404,7 @@ def save_portfolio():
         # Async embedding: load updated profile/portfolio rows and hand off
         try:
             conn2 = get_db_connection()
-            cur2 = conn2.cursor(dictionary=True)
+            cur2 = conn2.cursor(cursor_factory=RealDictCursor)
             cur2.execute("SELECT * FROM investor_profiles WHERE email = %s", (email,))
             investor_profile = cur2.fetchone() or {}
             cur2.execute("SELECT * FROM investor_portfolio_profile WHERE email = %s", (email,))

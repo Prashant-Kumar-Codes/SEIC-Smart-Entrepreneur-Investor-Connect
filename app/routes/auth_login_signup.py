@@ -36,7 +36,7 @@ def verify_page():
 
     remaining = 600
     if result and result[0]:
-        elapsed   = (datetime.now() - result[0]).total_seconds()
+        elapsed   = (datetime.utcnow() - result[0]).total_seconds()
         remaining = max(0, 600 - int(elapsed))
 
     print(f"⏱ OTP remaining: {remaining}s for {email}")
@@ -79,7 +79,7 @@ def verify():
         stored_otp, otp_created_at = result
         print(f"🗄 Stored OTP: {stored_otp} | Created: {otp_created_at}")
 
-        if datetime.now() - otp_created_at > timedelta(minutes=10):
+        if datetime.utcnow() - otp_created_at > timedelta(minutes=10):
             cursor.close(); mycon.close()
             print(f"⌛ OTP expired for {email}")
             flash('OTP has expired. Please request a new one.', 'error')
@@ -91,7 +91,7 @@ def verify():
             flash('Invalid OTP. Please try again.', 'error')
             return redirect(url_for('login_signup_auth.verify_page'))
 
-        cursor.execute("UPDATE login_data SET is_verified = 1, otp = NULL WHERE email = %s", (email,))
+        cursor.execute("UPDATE login_data SET is_verified = true, otp = NULL WHERE email = %s", (email,))
         mycon.commit()
         cursor.close(); mycon.close()
 
@@ -311,7 +311,7 @@ def signup():
         # Fresh signup — insert user (with authorized = 'not_authorized' by default)
         cursor.execute(
             """INSERT INTO login_data (username, email, age, gender, role, password, otp, otp_created_at, is_verified, authorized)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), 0, 'not_authorized')""",
+               VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), false, 'not_authorized')""",
             (username, email, age, gender, role, hashed_password, otp)
         )
         mycon.commit()
@@ -449,11 +449,11 @@ def delete_unverified_users():
         cursor = mycon.cursor()
 
         # Calculate the cutoff time (24 hours ago)
-        cutoff_time = datetime.now() - timedelta(hours=24)
+        cutoff_time = datetime.utcnow() - timedelta(hours=24)
         
         # Find unverified users who are older than 24 hours
         cursor.execute(
-            "SELECT email FROM login_data WHERE is_verified = 0 AND otp_created_at < %s",
+            "SELECT email FROM login_data WHERE is_verified = false AND otp_created_at < %s",
             (cutoff_time,)
         )
         users_to_delete = cursor.fetchall()

@@ -18,7 +18,7 @@ def chat_page():
     print(f"💬 AI Chat → {email}")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
     # Profile (for sidebar + AI context)
     cursor.execute("""
@@ -95,7 +95,7 @@ def get_chat_history():
 
     try:
         mycon  = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
             SELECT role, content, created_at
             FROM ai_chat_messages
@@ -133,7 +133,7 @@ def list_sessions():
 
     try:
         mycon  = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
             SELECT
                 s.session_id,
@@ -188,7 +188,7 @@ def send_message():
 
     try:
         mycon  = get_db_connection()
-        cursor = mycon.cursor(dictionary=True)
+        cursor = mycon.cursor(cursor_factory=RealDictCursor)
 
         # ── Load entrepreneur profile & pitch ──────────────────────────
         cursor.execute("""

@@ -15,7 +15,7 @@ def entrepreneur_profile():
     print(f"👤 My Profile → {email}")
 
     mycon  = get_db_connection()
-    cursor = mycon.cursor(dictionary=True)
+    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.created_at,
