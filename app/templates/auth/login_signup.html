@@ -333,17 +333,30 @@
                 });
                 const data = await res.json();
 
+                console.log('[Signup Response]', data);
+
                 if (data.success) {
-                    showToast(data.message, 'success');
-                    setTimeout(() => window.location.href = '/verify', 1800);
+                    // Account created successfully
+                    if (data.email_sent) {
+                        // Email sent - best case
+                        showToast('✅ ' + data.message, 'success');
+                    } else {
+                        // Email failed but account created
+                        showToast('⚠️ ' + data.message, 'warning');
+                    }
+                    // Redirect in either case
+                    setTimeout(() => window.location.href = '/verify', 2000);
                 } else if (data.redirect_to_verify) {
-                    showToast(data.message, 'warning');
-                    setTimeout(() => window.location.href = '/verify', 1800);
+                    // Auth or existing account issues, but still redirect
+                    showToast('⚠️ ' + data.message, 'warning');
+                    setTimeout(() => window.location.href = '/verify', 2000);
                 } else {
-                    showToast(data.message || 'Sign up failed. Please try again.', 'error');
+                    // Actual failure
+                    showToast('❌ ' + (data.message || 'Sign up failed. Please try again.'), 'error');
                 }
             } catch (err) {
-                showToast('Network error. Please try again.', 'error');
+                console.error('[Signup Error]', err);
+                showToast('Network error. Please check your internet and try again.', 'error');
             } finally {
                 btn.disabled    = false;
                 btn.textContent = 'Sign Up';

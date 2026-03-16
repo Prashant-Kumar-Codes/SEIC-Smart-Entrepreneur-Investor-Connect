@@ -189,22 +189,31 @@
         })
         .then(async response => {
             const data = await response.json();
+            console.log('[Resend OTP Response]', data);
+            
             if (data.success) {
-                showToast(data.message, 'success');
+                showToast('✅ ' + (data.message || 'OTP sent successfully!'), 'success');
                 timeLeft = 60;
                 startTimer();
                 otpInput.value = '';
                 otpInput.focus();
             } else {
-                showToast(data.message || 'Failed to resend OTP.', 'error');
-                resendBtn.disabled = false;
-                resendText.textContent = 'Resend OTP';
+                // Email might have failed, but OTP is in database
+                const errorMsg = data.message || 'Failed to resend OTP.';
+                showToast('⚠️ ' + errorMsg, 'warning');
+                
+                // Still allow user to retry after a delay
+                setTimeout(() => {
+                    resendBtn.disabled = false;
+                    resendText.innerHTML = '<i class="fas fa-redo-alt"></i> Try Again';
+                }, 3000);
             }
         })
         .catch(error => {
-            showToast('Network error. Please try again.', 'error');
+            console.error('[Resend OTP Error]', error);
+            showToast('🔴 Network error connecting to server. Check your internet and try again.', 'error');
             resendBtn.disabled = false;
-            resendText.textContent = 'Resend OTP';
+            resendText.innerHTML = '<i class="fas fa-redo-alt"></i> Resend OTP';
         });
     });
 

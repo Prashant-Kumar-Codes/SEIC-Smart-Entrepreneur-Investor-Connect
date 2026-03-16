@@ -115,12 +115,15 @@ def verify():
 
 @login_signup_auth.route('/resend_otp', methods=['POST'])
 def resend_otp():
+    from flask import current_app
+    
     try:
         email    = session.get('verification_email')
         username = session.get('verification_username', 'User')
-        print(f"📧 Resend OTP → {email}")
+        current_app.logger.info(f"📧 Resend OTP request → {email}")
 
         if not email:
+            current_app.logger.warning(f"⚠️ Resend OTP: Session expired, no verification_email")
             flash('Session expired. Please sign up again.', 'error')
             return redirect(url_for('login_signup_auth.login_signup'))
 
@@ -128,21 +131,31 @@ def resend_otp():
 
         mycon  = get_db_connection()
         cursor = mycon.cursor()
+        current_app.logger.info(f"🔄 Updating OTP in database for {email}")
         cursor.execute("UPDATE login_data SET otp = %s, otp_created_at = %s WHERE email = %s", (otp, datetime.utcnow(), email))
         mycon.commit()
         cursor.close(); mycon.close()
-        print(f"🗄 New OTP saved for {email}")
+        current_app.logger.info(f"✅ New OTP saved for {email}: {otp}")
 
         try:
+            current_app.logger.info(f"📧 Attempting to send new OTP email to {email}...")
             send_otp_email(email, otp, username)
+            current_app.logger.info(f"✅ Resend OTP email sent successfully to {email}")
             return jsonify({'success': True, 'message': 'New OTP sent to your email!'})
         except Exception as e:
-            print(f"[WARNING] Email send failed: {e}")
-            return jsonify({'success': False, 'message': 'Failed to send email. Please check your internet or try again later.'}), 500
+            error_msg = str(e)
+            current_app.logger.error(f"❌ Resend OTP email failed for {email}: {error_msg}")
+            current_app.logger.debug(f"📋 OTP IS saved in database: {otp}")
+            return jsonify({
+                'success': False, 
+                'message': f'Failed to send email: {error_msg}. Please check your internet connection and try again. (OTP is ready in our system)'
+            }), 500
 
     except Exception as e:
-        print(f"❌ Resend OTP error: {e}")
-        return jsonify({'success': False, 'message': 'An error occurred. Please try again.'}), 500
+        current_app.logger.error(f"❌ Resend OTP error: {e}")
+        import traceback
+        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'}), 500
 
 
 # =====================================================================
@@ -256,6 +269,8 @@ def login():
 
 @login_signup_auth.route('/signup', methods=['POST'])
 def signup():
+    from flask import current_app
+    
     try:
         data     = request.get_json()
         username = data.get('username', '').strip()
@@ -265,11 +280,13 @@ def signup():
         role     = data.get('role', '').strip()
         password = data.get('password', '')
 
-        print(f"📝 Signup → {username} | {email} | age:{age} | {gender} | {role}")
+        current_app.logger.info(f"📝 Signup → {username} | {email} | age:{age} | {gender} | {role}")
 
         if not all([username, email, age, gender, role, password]):
+            current_app.logger.warning(f"❌ Missing signup fields for {email}")
             return jsonify({'success': False, 'message': 'All fields are required.'}), 400
         if len(password) < 6:
+            current_app.logger.warning(f"❌ Weak password for {email}")
             return jsonify({'success': False, 'message': 'Password must be at least 6 characters.'}), 400
 
         hashed_password = generate_password_hash(password)
@@ -288,14 +305,14 @@ def signup():
 
             if is_verified:
                 # Fully registered account — tell them to log in
-                print(f"[WARNING] Email already registered & verified: {email}")
+                current_app.logger.warning(f"⚠️ Email already registered & verified: {email}")
                 return jsonify({
                     'success': False,
                     'message': 'This email is already registered. Please log in instead.'
                 }), 409
             else:
                 # CHANGE 3: Account exists but is unverified — tell them clearly and redirect to verify
-                print(f"[WARNING] Email exists but not verified: {email}")
+                current_app.logger.warning(f"⚠️ Email exists but not verified: {email}")
                 session['verification_email']    = email
                 session['verification_username'] = existing_username
                 return jsonify({
@@ -305,6 +322,7 @@ def signup():
                 }), 409
 
         # Fresh signup — insert user (with authorized = 'not_authorized' by default)
+        current_app.logger.info(f"💾 Inserting new user: {email}")
         cursor.execute(
             """INSERT INTO login_data (username, email, age, gender, role, password, otp, otp_created_at, is_verified, authorized)
                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, false, 'not_authorized')""",
@@ -312,30 +330,51 @@ def signup():
         )
         mycon.commit()
         cursor.close(); mycon.close()
-        print(f"[OK] User inserted: {email} | authorized: not_authorized")
+        current_app.logger.info(f"✅ User inserted: {email} | OTP: {otp} | authorized: not_authorized")
 
         session['verification_email']    = email
         session['verification_username'] = username
 
+        # ===== ATTEMPT EMAIL SENDING =====
+        email_sent = False
+        email_error = None
+        
         try:
+            current_app.logger.info(f"🔄 Attempting to send OTP email to {email}...")
             send_otp_email(email, otp, username)
-            print(f"[OK] OTP email sent -> {email}")
+            email_sent = True
+            current_app.logger.info(f"✅ OTP email sent successfully to {email}")
+        except Exception as e:
+            email_error = str(e)
+            current_app.logger.error(f"❌ OTP email send failed for {email}: {email_error}")
+            current_app.logger.debug(f"📋 But OTP IS saved in database (otp={otp}), user can use Resend OTP")
+
+        # ===== RESPONSE LOGIC =====
+        if email_sent:
+            # Best case: everything worked
+            current_app.logger.info(f"🎉 Full signup success for {email}")
             return jsonify({
                 'success': True,
-                'message': 'Account created! Please check your email for the OTP.'
+                'message': 'Account created! OTP email sent. Please check your inbox and verify.',
+                'redirect_to_verify': True,
+                'email_sent': True
             }), 201
-        except Exception as e:
-            print(f"[WARNING] OTP email failed: {e}")
+        else:
+            # Email failed, but user and OTP are created
+            current_app.logger.warning(f"⚠️ Partial success for {email}: User created but email failed")
             return jsonify({
-                'success': True, # Still 201 because user is created, but with a warning
-                'message': 'Account created, but we failed to send the OTP email. Please use the "Resend OTP" button on the next page.',
-                'redirect_to_verify': True
+                'success': True,  # Still True because user IS created
+                'message': f'Account created successfully! ⚠️ However, we had trouble sending the OTP email. The OTP is ready in our system. Please go to the next page and click "Resend OTP" to receive it.',
+                'redirect_to_verify': True,
+                'email_sent': False,
+                'email_error': email_error
             }), 201
 
     except Exception as e:
-        print(f"❌ Signup error: {e}")
-        import traceback; traceback.print_exc()
-        return jsonify({'success': False, 'message': 'Registration failed. Please try again.'}), 500
+        current_app.logger.error(f"❌ Signup error: {e}")
+        import traceback
+        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'success': False, 'message': f'Registration failed: {str(e)}'}), 500
 
 
 # =====================================================================
@@ -355,12 +394,24 @@ def logout():
 # =====================================================================
 
 def send_otp_email(email, otp, username):
-    print(f"📧 Sending OTP email → {email} (user: {username})")
-
-    msg = Message(
-        subject    = "Your OTP for EISC Verification",
-        recipients = [email],
-        html       = f"""
+    """Send OTP email with comprehensive logging"""
+    from flask import current_app
+    
+    current_app.logger.info(f"📧 Sending OTP email → {email} (user: {username}, otp: {otp})")
+    
+    try:
+        # Log email configuration
+        current_app.logger.debug(f"📫 Email Config:")
+        current_app.logger.debug(f"  - Server: {current_app.config.get('MAIL_SERVER')}")
+        current_app.logger.debug(f"  - Port: {current_app.config.get('MAIL_PORT')}")
+        current_app.logger.debug(f"  - Username: {current_app.config.get('MAIL_USERNAME', 'NOT SET')}")
+        current_app.logger.debug(f"  - Use TLS: {current_app.config.get('MAIL_USE_TLS')}")
+        current_app.logger.debug(f"  - Use SSL: {current_app.config.get('MAIL_USE_SSL')}")
+        
+        msg = Message(
+            subject    = "Your OTP for EISC Verification",
+            recipients = [email],
+            html       = f"""
 <html>
 <head>
   <style>
@@ -429,9 +480,20 @@ def send_otp_email(email, otp, username):
   </div>
 </body>
 </html>"""
-    )
-    mail.send(msg)
-    print(f"[OK] OTP email dispatched -> {email}")
+        )
+        
+        current_app.logger.info(f"📨 Message created successfully, attempting to send...")
+        mail.send(msg)
+        current_app.logger.info(f"✅ OTP email sent successfully → {email}")
+        return True
+        
+    except Exception as e:
+        current_app.logger.error(f"❌ CRITICAL: Email send failed → {email}")
+        current_app.logger.error(f"   Error Type: {type(e).__name__}")
+        current_app.logger.error(f"   Error Message: {str(e)}")
+        import traceback
+        current_app.logger.error(f"   Traceback: {traceback.format_exc()}")
+        raise
 
 
 # =====================================================================
