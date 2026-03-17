@@ -14,6 +14,14 @@ def login_signup():
     return render_template('auth/login_signup.html', redirect_to=redirect_to)
 
 
+# route to admin dashboard
+@login_signup_auth.route('/admin_dashboard', methods=['GET'])
+def admin_dashboard():
+    redirect_to = request.args.get('redirect_to', '')
+    print(f"📄 login_signup page | redirect_to='{redirect_to}'")
+    return render_template('auth/admin/admin_dashboard.html', redirect_to=redirect_to)    
+
+
 # =====================================================================
 # OTP VERIFY PAGE (GET)
 # =====================================================================

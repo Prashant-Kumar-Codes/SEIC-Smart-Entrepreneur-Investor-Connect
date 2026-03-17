@@ -574,7 +574,7 @@
         content.innerHTML = '<p class="loading">Loading...</p>';
         modal.classList.add('show');
 
-        fetch(`{{ url_for('admin_verification.get_user_details', email='') }}${email}`)
+        fetch(`{{ url_for('admin_verification.get_user_details') }}?email=${email}`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {

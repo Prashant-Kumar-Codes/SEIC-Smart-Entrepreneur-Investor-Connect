@@ -141,7 +141,7 @@ svg {
 .topbar-actions { display: flex; align-items: center; gap: 14px; }
 
 .sidebar-toggle-btn {
-    display: none; 
+    display: none;
     background: transparent; border: none; 
     color: var(--bg-white); padding: 8px 12px;
     border-radius: var(--r-md); cursor: pointer;
@@ -444,7 +444,7 @@ svg {
     }
     .sidebar.active { transform: translateX(0); }
     .main-wrap { margin-left: 0; }
-    .sidebar-toggle-btn { display: flex; align-items: center; justify-content: center; }
+    .sidebar-toggle-btn { display: flex !important; align-items: center; justify-content: center; }
     .mobile-close-btn { display: flex; }
     .topbar { padding: 0 16px; }
     .page-content { padding: 0 20px 20px; }

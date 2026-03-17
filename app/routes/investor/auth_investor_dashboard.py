@@ -451,7 +451,7 @@ def investor_home():
 # FEED
 # =====================================================================
 
-@investor_dashboard_bp.route('/feed')
+@investor_dashboard_bp.route('/dashboard/investor/feed')
 def investor_feed():
     """Investor feed - view pitches from entrepreneurs"""
     if 'user_id' not in session:
@@ -468,6 +468,7 @@ def investor_feed():
     profile = get_investor_profile(email)
     posts = get_feed_posts(limit=limit, offset=offset)
     unread_msgs = get_unread_count(email)
+    unread_notifs = get_notification_count(email)
     
     return render_template(
         'auth/investor/investor_feed.html',
@@ -475,7 +476,8 @@ def investor_feed():
         profile=profile,
         posts=posts,
         page=page,
-        unread_msgs=unread_msgs
+        unread_msgs=unread_msgs,
+        unread_notifs=unread_notifs
     )
 
 

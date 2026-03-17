@@ -358,38 +358,6 @@ def entrepreneur_home():
 
 
 # =====================================================================
-# PITCH FEED PAGE
-# =====================================================================
-
-@entrepreneur_dashboard_bp.route('/dashboard/entrepreneur/feed')
-def entrepreneur_feed():
-    if 'user_id' not in session:
-        flash('Please log in first.', 'error')
-        return redirect(url_for('login_signup_auth.login_signup'))
-
-    email = session.get('user_email')
-    print(f"📰 Entrepreneur Feed → {email}")
-
-    profile       = get_entrepreneur_profile(email)
-    posts         = get_feed_posts(limit=20)
-    threads       = get_message_threads(email)
-    unread_msgs   = get_unread_count(email)
-    unread_notifs = get_notification_count(email)
-
-    for p in posts:
-        p['time_ago'] = time_ago(p['created_at'])
-
-    return render_template(
-        'auth/entrepreneur/entrepreneur_feed.html',
-        profile       = profile,
-        posts         = posts,
-        threads       = threads,
-        unread_msgs   = unread_msgs,
-        unread_notifs = unread_notifs,
-    )
-
-
-# =====================================================================
 # CREATE PITCH POST
 # =====================================================================
 

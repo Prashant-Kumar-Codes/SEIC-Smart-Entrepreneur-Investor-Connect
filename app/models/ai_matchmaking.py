@@ -18,9 +18,9 @@ def get_embedding_model():
     global _model
     if _model is None:
         try:
-            print("[INFO] Loading embedding model: all-MiniLM-L6-v2 (this may take 30-60 seconds on first load)...")
+            print("\n[INFO] Loading embedding model: all-MiniLM-L6-v2 (this may take 30-60 seconds on first load)...")
             _model = SentenceTransformer('all-MiniLM-L6-v2')
-            print("[OK] Embedding model loaded: all-MiniLM-L6-v2")
+            print("[OK] Embedding model loaded: all-MiniLM-L6-v2\n")
         except Exception as e:
             print(f"[CRITICAL] Failed to load embedding model: {e}")
             raise RuntimeError(f"Failed to load embedding model: {e}") from e

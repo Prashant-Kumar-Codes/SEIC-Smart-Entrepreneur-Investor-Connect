@@ -418,10 +418,10 @@ svg { flex-shrink: 0; max-width: 32px; max-height: 32px; } /* Universal safety n
         top: 0; 
         left: 0;
         transform: translateX(-100%); 
-        z-index: 45;
+        z-index: 50;
     }
     .sidebar.active { transform: translateX(0); }
-    .sidebar-toggle-btn { display: flex; align-items: center; justify-content: center; }
+    .sidebar-toggle-btn { display: flex !important; align-items: center; justify-content: center; }
     .mobile-close-btn { display: flex; }
     .topbar { padding: 0 24px; }
     .page-content { padding: 24px; }
