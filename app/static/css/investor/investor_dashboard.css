@@ -103,6 +103,47 @@ svg { flex-shrink: 0; max-width: 32px; max-height: 32px; } /* Universal safety n
 .sidebar-logo-text { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--white); letter-spacing: -0.5px; }
 .sidebar-logo-text span { color: var(--primary-orange); }
 
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 40;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Mobile Close Button */
+.mobile-close-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--sidebar-text);
+    padding: 8px;
+    cursor: pointer;
+    border-radius: var(--r-md);
+    transition: all 0.2s;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+}
+.mobile-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+}
+
 .sidebar-nav { flex: 1; padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; }
 .nav-link {
     display: flex; align-items: center; gap: 11px; padding: 10px 12px;
@@ -157,6 +198,10 @@ svg { flex-shrink: 0; max-width: 32px; max-height: 32px; } /* Universal safety n
     color: var(--navy); padding: 8px;
     border-radius: var(--r-md); cursor: pointer;
     transition: background 0.2s, color 0.2s;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
 }
 .sidebar-toggle-btn:hover {
     background: var(--blue-50); color: var(--primary-orange);
@@ -368,9 +413,16 @@ svg { flex-shrink: 0; max-width: 32px; max-height: 32px; } /* Universal safety n
 
 @media (max-width: 768px) {
     .main-wrap { margin-left: 0; width: 100%; }
-    .sidebar { transform: translateX(-100%); }
+    .sidebar { 
+        position: fixed; 
+        top: 0; 
+        left: 0;
+        transform: translateX(-100%); 
+        z-index: 45;
+    }
     .sidebar.active { transform: translateX(0); }
     .sidebar-toggle-btn { display: flex; align-items: center; justify-content: center; }
+    .mobile-close-btn { display: flex; }
     .topbar { padding: 0 24px; }
     .page-content { padding: 24px; }
     .stats-row { grid-template-columns: 1fr; }

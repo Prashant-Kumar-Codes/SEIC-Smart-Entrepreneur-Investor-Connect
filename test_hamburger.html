@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamburger Button Test</title>
+    <link rel="stylesheet" href="app/static/css/entrepreneur_dashboard.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; }
+        /* Test viewport sizes */
+        .test-info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay Test -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar Test -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">LOGO</div>
+            <span class="sidebar-logo-text">SEI<span>C</span></span>
+            <button class="mobile-close-btn" id="sidebarCloseBtn">
+                <span>✕</span>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-link active">Home</a>
+            <a href="#" class="nav-link">Profile</a>
+            <a href="#" class="nav-link">Pitch Deck</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrap">
+        <!-- Topbar Test -->
+        <header class="topbar">
+            <div class="topbar-titles">
+                <div class="topbar-page-title">Test <span>Dashboard</span></div>
+            </div>
+            <div class="topbar-actions">
+                <button class="topbar-icon-btn sidebar-toggle-btn" id="sidebarToggleBtn" type="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <h1>Hamburger Button Test</h1>
+            <p>Resize the window to see the hamburger button appear at 768px and below.</p>
+            <p><strong>Current window width:</strong> <span id="windowWidth">-</span>px</p>
+        </div>
+    </div>
+
+    <!-- Test Info -->
+    <div class="test-info">
+        <div>Hamburger visibility:</div>
+        <div id="status">Desktop View (< 768px to show button)</div>
+    </div>
+
+    <!-- JavaScript Test -->
+    <script src="app/static/js/sidebar-mobile.js"></script>
+    <script>
+        // Test info updater
+        function updateInfo() {
+            const width = window.innerWidth;
+            document.getElementById('windowWidth').textContent = width;
+            
+            const hamburger = document.getElementById('sidebarToggleBtn');
+            const computed = window.getComputedStyle(hamburger);
+            const isVisible = computed.display !== 'none';
+            
+            document.getElementById('status').textContent = 
+                isVisible ? `✓ Mobile View (${width}px - hamburger VISIBLE)` : 
+                `Desktop View (${width}px - hamburger HIDDEN)`;
+        }
+
+        window.addEventListener('resize', updateInfo);
+        window.addEventListener('load', updateInfo);
+        updateInfo();
+
+        console.log('Hamburger button test loaded');
+    </script>
+</body>
+</html>
