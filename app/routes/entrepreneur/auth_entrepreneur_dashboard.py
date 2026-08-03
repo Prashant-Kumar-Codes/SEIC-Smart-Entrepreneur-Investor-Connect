@@ -9,35 +9,31 @@ def api_all_investors():
     if 'user_id' not in session:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
     email = session.get('user_email')
-    mycon = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
-    # Get entrepreneur's embedding (if available)
-    cursor.execute("SELECT embedding FROM user_embeddings WHERE email = %s AND role = 'entrepreneur'", (email,))
-    row = cursor.fetchone()
-    import numpy as np, json
-    ent_emb = np.array(json.loads(row['embedding'])) if row and row.get('embedding') else None
-    # Get all investors with their embeddings and verification status
+    conn = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    # Try to use pre-computed match scores from ai_match_cache first
     cursor.execute("""
-        SELECT ip.email, ld.username, ld.is_verified, ip.firm_name, ip.investment_focus, 
+        SELECT ip.email, ld.username, ld.is_verified, ip.firm_name, ip.investment_focus,
                ip.profile_image_url, ip.profile_score, ip.bio, ip.location, ip.investor_type,
-               ip.total_investments, ue.embedding
+               ip.total_investments,
+               COALESCE(amc.score, 0) AS match_score
         FROM investor_profiles ip
         JOIN login_data ld ON ip.email = ld.email
-        LEFT JOIN user_embeddings ue ON ue.email = ip.email AND ue.role = 'investor'
-    """)
-    investors = []
-    for inv in cursor.fetchall():
-        score = None
-        if ent_emb is not None and inv.get('embedding'):
-            try:
-                inv_emb = np.array(json.loads(inv['embedding']))
-                score = float(np.dot(ent_emb, inv_emb) / (np.linalg.norm(ent_emb) * np.linalg.norm(inv_emb)))
-            except Exception:
-                score = None
-        inv['match_score'] = round(score, 3) if score is not None else None
-        if 'embedding' in inv: del inv['embedding']
-        investors.append(inv)
-    cursor.close(); mycon.close()
+        LEFT JOIN ai_match_cache amc
+            ON amc.investor_email = ip.email
+            AND amc.entrepreneur_email = %s
+            AND amc.direction = 'entrepreneur_to_investor'
+        ORDER BY match_score DESC
+    """, (email,))
+    investors = cursor.fetchall()
+
+    # Coerce Decimal → float for JSON serialization
+    for inv in investors:
+        if inv.get('match_score') is not None:
+            inv['match_score'] = round(float(inv['match_score']), 3)
+
+    cursor.close()
     return jsonify({'success': True, 'investors': investors})
 
 
@@ -46,27 +42,25 @@ def api_all_investors():
 def api_all_entrepreneurs():
     if 'user_id' not in session:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
-    mycon = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
+    conn = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
-        SELECT ep.email, ld.username, ld.is_verified, ep.startup_name, ep.industry, 
+        SELECT ep.email, ld.username, ld.is_verified, ep.startup_name, ep.industry,
                ep.profile_image_url, ep.profile_score, ep.bio, ep.location, ep.stage,
                ep.funding_required, ep.team_size
         FROM entrepreneur_profile ep
         JOIN login_data ld ON ep.email = ld.email
     """)
     entrepreneurs = cursor.fetchall()
-    cursor.close(); mycon.close()
+    cursor.close()
     return jsonify({'success': True, 'entrepreneurs': entrepreneurs})
 
 
 # =====================================================================
-# HELPERS
+# HELPERS — all accept an optional cursor to share the request connection
 # =====================================================================
 
-def get_entrepreneur_profile(email):
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
+def _get_entrepreneur_profile(cursor, email):
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.age, ld.gender,
@@ -79,84 +73,10 @@ def get_entrepreneur_profile(email):
         LEFT JOIN entrepreneur_profile ep ON ld.email = ep.email
         WHERE ld.email = %s
     """, (email,))
-    profile = cursor.fetchone()
-    cursor.close(); mycon.close()
-    return profile
+    return cursor.fetchone()
 
 
-def get_feed_posts(limit=20, offset=0):
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("""
-        SELECT
-            pp.post_id, pp.email, pp.title, pp.description,
-            pp.industry_tag,
-            pp.pitch_deck_url, pp.video_url, pp.thumbnail_url,
-            pp.likes_count, pp.comments_count, pp.saves_count, pp.views_count,
-            pp.created_at,
-            ld.username,
-            ep.startup_name, ep.profile_image_url
-        FROM user_posts pp
-        JOIN login_data ld ON pp.email = ld.email
-        LEFT JOIN entrepreneur_profile ep ON pp.email = ep.email
-        WHERE pp.is_active = 1
-        ORDER BY pp.created_at DESC
-        LIMIT %s OFFSET %s
-    """, (limit, offset))
-    posts = cursor.fetchall()
-    cursor.close(); mycon.close()
-    return posts
-
-
-def get_message_threads(email):
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("""
-        SELECT
-            m.message_id,
-            CASE WHEN m.sender_email = %s THEN m.receiver_email ELSE m.sender_email END AS partner_email,
-            m.message_text AS last_message,
-            m.sent_at, m.is_read, m.sender_email,
-            ld.username AS partner_name,
-            ep.profile_image_url  AS partner_image,
-            ip.profile_image_url  AS partner_image_investor
-        FROM messages m
-        JOIN (
-            SELECT MAX(message_id) AS max_id FROM messages
-            WHERE sender_email = %s OR receiver_email = %s
-            GROUP BY LEAST(sender_email, receiver_email), GREATEST(sender_email, receiver_email)
-        ) latest ON m.message_id = latest.max_id
-        JOIN login_data ld
-            ON ld.email = CASE WHEN m.sender_email = %s THEN m.receiver_email ELSE m.sender_email END
-        LEFT JOIN entrepreneur_profile ep ON ep.email = ld.email
-        LEFT JOIN investor_profiles     ip ON ip.email = ld.email
-        ORDER BY m.sent_at DESC
-        LIMIT 20
-    """, (email, email, email, email))
-    threads = cursor.fetchall()
-    cursor.close(); mycon.close()
-    return threads
-
-
-def get_unread_count(email):
-    mycon  = get_db_connection()
-    cursor = mycon.cursor()
-    cursor.execute("SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = false", (email,))
-    count = cursor.fetchone()[0]
-    cursor.close(); mycon.close()
-    return count
-
-
-def get_notification_count(email):
-    mycon  = get_db_connection()
-    cursor = mycon.cursor()
-    cursor.execute("SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = false", (email,))
-    count = cursor.fetchone()[0]
-    cursor.close(); mycon.close()
-    return count
-
-
-def get_top_investors(entrepreneur_email, limit=3):
+def _get_top_investors(cursor, entrepreneur_email, limit=3):
     """
     Fetch top investor profiles. Priority:
     1. Investors who have sent a connection request to this entrepreneur
@@ -164,8 +84,6 @@ def get_top_investors(entrepreneur_email, limit=3):
     3. Other active investors
     Returns only REAL data from database - no padding with placeholder data
     """
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
             SELECT
@@ -192,22 +110,17 @@ def get_top_investors(entrepreneur_email, limit=3):
                 ip.created_at DESC
             LIMIT %s
         """, (entrepreneur_email, limit))
-        investors = cursor.fetchall()
+        return cursor.fetchall()
     except Exception as e:
         print(f"❌ Error fetching top investors: {e}")
-        investors = []
-    finally:
-        cursor.close(); mycon.close()
-    return investors
+        return []
 
 
-def get_upcoming_meetings(entrepreneur_email, limit=3):
+def _get_upcoming_meetings(cursor, entrepreneur_email, limit=3):
     """
     Fetch upcoming scheduled meetings for the entrepreneur (REAL data only).
     Shows only meetings that are scheduled and not cancelled.
     """
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
             SELECT
@@ -226,24 +139,17 @@ def get_upcoming_meetings(entrepreneur_email, limit=3):
             ORDER BY m.scheduled_at ASC
             LIMIT %s
         """, (entrepreneur_email, limit))
-        meetings = cursor.fetchall()
+        return cursor.fetchall()
     except Exception as e:
         print(f"❌ Error fetching meetings: {e}")
-        meetings = []
-    finally:
-        cursor.close(); mycon.close()
-    return meetings
+        return []
 
 
-def get_deal_counts(entrepreneur_email):
+def _get_deal_counts(cursor, entrepreneur_email):
     """
     Count connections/deals per stage for the Deal Tracker.
     Returns real counts from the deals table.
     """
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
-    
-    # Initialize all counts to 0
     counts = {
         'introduced': 0,
         'discussion': 0,
@@ -251,9 +157,8 @@ def get_deal_counts(entrepreneur_email):
         'term_sheet': 0,
         'closed': 0,
     }
-    
+
     try:
-        # Try to get from deals table first
         cursor.execute("""
             SELECT deal_stage, COUNT(*) AS cnt
             FROM deals
@@ -261,7 +166,7 @@ def get_deal_counts(entrepreneur_email):
             GROUP BY deal_stage
         """, (entrepreneur_email,))
         rows = cursor.fetchall()
-        
+
         stage_map = {
             'introduced': 'introduced',
             'in_discussion': 'discussion',
@@ -269,37 +174,29 @@ def get_deal_counts(entrepreneur_email):
             'term_sheet': 'term_sheet',
             'closed': 'closed',
         }
-        
+
         for row in rows:
             key = stage_map.get(row['deal_stage'])
             if key:
                 counts[key] = row['cnt']
     except Exception as e:
         print(f"❌ Error fetching deal counts: {e}")
-        # Return zeros if table/data doesn't exist
-        pass
-    finally:
-        cursor.close(); mycon.close()
-    
+
     # Return as object with attributes
     result = type('DealCounts', (), counts)()
     return result
 
 
-def get_investor_match_count(entrepreneur_email):
+def _get_investor_match_count(cursor, entrepreneur_email):
     """Count investors who have shown interest (accepted connections)."""
-    mycon  = get_db_connection()
-    cursor = mycon.cursor()
     try:
         cursor.execute("""
             SELECT COUNT(*) FROM connections
             WHERE entrepreneur_email = %s AND status = 'accepted'
         """, (entrepreneur_email,))
-        count = cursor.fetchone()[0]
+        return cursor.fetchone()[0]
     except Exception:
-        count = 0
-    cursor.close(); mycon.close()
-    return count
+        return 0
 
 
 def time_ago(dt):
@@ -312,6 +209,15 @@ def time_ago(dt):
     if s < 86400:   return f"{s // 3600}h ago"
     if s < 604800:  return f"{s // 86400}d ago"
     return dt.strftime("%b %d")
+
+
+# ── Backward-compatible wrappers (for any external callers) ──
+def get_entrepreneur_profile(email):
+    conn = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    result = _get_entrepreneur_profile(cursor, email)
+    cursor.close()
+    return result
 
 
 # =====================================================================
@@ -328,14 +234,21 @@ def entrepreneur_home():
     email = session.get('user_email')
     print(f"🏠 Entrepreneur Home → {email}")
 
-    # Fetch all data from database (will return empty list if no data)
-    profile              = get_entrepreneur_profile(email)
-    top_investors        = get_top_investors(email, limit=3) or []
-    meetings             = get_upcoming_meetings(email, limit=3) or []
-    deal_counts          = get_deal_counts(email)
-    investor_match_count = get_investor_match_count(email)
-    unread_msgs          = get_unread_count(email)
-    unread_notifs        = get_notification_count(email)
+    # ── Single connection, single cursor for ALL dashboard queries ──
+    conn   = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    profile              = _get_entrepreneur_profile(cursor, email)
+    top_investors        = _get_top_investors(cursor, email, limit=3)
+    meetings             = _get_upcoming_meetings(cursor, email, limit=3)
+    deal_counts          = _get_deal_counts(cursor, email)
+    investor_match_count = _get_investor_match_count(cursor, email)
+
+    cursor.close()
+
+    # These use the same request conn internally
+    unread_msgs   = get_unread_count(email)
+    unread_notifs = get_notification_count(email)
 
     # Log what we're sending to template
     print(f"📊 Dashboard Data:")
@@ -381,8 +294,8 @@ def create_post():
         return jsonify({'success': False, 'message': 'Title and description are required.'}), 400
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO user_posts
                 (email, title, description,
@@ -394,9 +307,9 @@ def create_post():
             UPDATE entrepreneur_profile SET total_pitches = total_pitches + 1
             WHERE email = %s
         """, (email,))
-        mycon.commit()
+        conn.commit()
         post_id = cursor.lastrowid
-        cursor.close(); mycon.close()
+        cursor.close()
         print(f"✅ Pitch created: post_id={post_id} by {email}")
         return jsonify({'success': True, 'post_id': post_id}), 201
 
@@ -426,8 +339,8 @@ def interact_post(post_id):
     count_col_map = {'like': 'likes_count', 'save': 'saves_count',
                      'interested': 'likes_count', 'view': 'views_count'}
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO post_interactions (user_email, post_id, interaction_type)
             VALUES (%s, %s, %s)
@@ -436,8 +349,8 @@ def interact_post(post_id):
         if cursor.rowcount > 0:
             col = count_col_map[interaction_type]
             cursor.execute(f"UPDATE user_posts SET {col} = {col} + 1 WHERE post_id = %s", (post_id,))
-        mycon.commit()
-        cursor.close(); mycon.close()
+        conn.commit()
+        cursor.close()
         return jsonify({'success': True}), 200
     except Exception as e:
         print(f"❌ Interact error: {e}")
@@ -458,8 +371,8 @@ def edit_profile():
     data  = request.get_json()
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO entrepreneur_profile
                 (email, startup_name, bio, industry, location, website_url, linkedin_url, twitter_url)
@@ -477,14 +390,12 @@ def edit_profile():
               data.get('industry','').strip(),     data.get('location','').strip(),
               data.get('website_url','').strip(),  data.get('linkedin_url','').strip(),
               data.get('twitter_url','').strip()))
-        mycon.commit()
-        cursor.close(); mycon.close()
-        
+        conn.commit()
+        cursor.close()
+
         # Trigger profile scoring
         try:
-            new_con = get_db_connection()
-            result = compute_and_save_entrepreneur_profile_score(email, new_con)
-            new_con.close()
+            result = compute_and_save_entrepreneur_profile_score(email, conn)
             if result:
                 print(f"✅ Profile score updated for {email}")
             else:
@@ -493,7 +404,7 @@ def edit_profile():
             import traceback
             print(f"⚠️ Warning: Could not update profile score for {email}: {scoring_err}")
             # Don't fail the entire request if scoring fails
-            
+
         return jsonify({'success': True}), 200
     except Exception as e:
         print(f"❌ Edit profile error: {e}")
@@ -519,14 +430,14 @@ def send_message():
         return jsonify({'success': False, 'message': 'Receiver and message are required.'}), 400
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO messages (sender_email, receiver_email, message_text)
             VALUES (%s, %s, %s)
         """, (sender_email, receiver_email, message_text))
-        mycon.commit()
-        cursor.close(); mycon.close()
+        conn.commit()
+        cursor.close()
         return jsonify({'success': True}), 201
     except Exception as e:
         print(f"❌ Send message error: {e}")
@@ -548,14 +459,14 @@ def mark_messages_read():
     partner_email = data.get('partner_email', '').strip()
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             UPDATE messages SET is_read = true, read_at = NOW()
             WHERE receiver_email = %s AND sender_email = %s AND is_read = false
         """, (email, partner_email))
-        mycon.commit()
-        cursor.close(); mycon.close()
+        conn.commit()
+        cursor.close()
         return jsonify({'success': True}), 200
     except Exception as e:
         print(f"❌ Mark read error: {e}")
@@ -566,6 +477,26 @@ def mark_messages_read():
 # LOAD MORE FEED  (pagination)
 # =====================================================================
 
+def _get_feed_posts(cursor, limit=20, offset=0):
+    cursor.execute("""
+        SELECT
+            pp.post_id, pp.email, pp.title, pp.description,
+            pp.industry_tag,
+            pp.pitch_deck_url, pp.video_url, pp.thumbnail_url,
+            pp.likes_count, pp.comments_count, pp.saves_count, pp.views_count,
+            pp.created_at,
+            ld.username,
+            ep.startup_name, ep.profile_image_url
+        FROM user_posts pp
+        JOIN login_data ld ON pp.email = ld.email
+        LEFT JOIN entrepreneur_profile ep ON pp.email = ep.email
+        WHERE pp.is_active = 1
+        ORDER BY pp.created_at DESC
+        LIMIT %s OFFSET %s
+    """, (limit, offset))
+    return cursor.fetchall()
+
+
 @entrepreneur_dashboard_bp.route('/api/feed', methods=['GET'])
 def load_feed():
     if 'user_id' not in session:
@@ -573,7 +504,11 @@ def load_feed():
 
     offset = int(request.args.get('offset', 0))
     limit  = int(request.args.get('limit', 10))
-    posts  = get_feed_posts(limit=limit, offset=offset)
+
+    conn   = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    posts  = _get_feed_posts(cursor, limit=limit, offset=offset)
+    cursor.close()
 
     for p in posts:
         p['time_ago']   = time_ago(p['created_at'])
@@ -601,14 +536,14 @@ def schedule_meeting():
         return jsonify({'success': False, 'message': 'All fields are required.'}), 400
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO meetings (entrepreneur_email, investor_email, meeting_type, scheduled_at, status)
             VALUES (%s, %s, %s, %s, 'scheduled')
         """, (email, investor_email, meeting_type, scheduled_at))
-        mycon.commit()
-        cursor.close(); mycon.close()
+        conn.commit()
+        cursor.close()
         print(f"✅ Meeting scheduled: {email} ↔ {investor_email}")
         return jsonify({'success': True, 'message': 'Meeting scheduled successfully!'}), 201
 
@@ -631,8 +566,8 @@ def entrepreneur_matches():
     email = session.get('user_email')
     print(f"🎯 Investor Matches → {email}")
 
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
+    conn   = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     # Profile (for sidebar)
     cursor.execute("""
@@ -648,9 +583,9 @@ def entrepreneur_matches():
     profile = cursor.fetchone()
 
     # Get top N investor matches (ranked by score)
-    top_investors = get_top_investors(email, limit=50)  # Get more for detailed matches page
+    top_investors = _get_top_investors(cursor, email, limit=50)
 
-    cursor.close(); mycon.close()
+    cursor.close()
 
     from datetime import datetime
     return render_template(
@@ -674,13 +609,13 @@ def entrepreneur_deals():
     if 'user_id' not in session:
         flash('Please log in first.', 'error')
         return redirect(url_for('login_signup_auth.login_signup'))
-    
+
     email = session.get('user_email')
     print(f"📊 Entrepreneur Deals → {email}")
-    
-    mycon = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
-    
+
+    conn   = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
     # Get all deals for entrepreneur
     cursor.execute("""
         SELECT
@@ -696,7 +631,7 @@ def entrepreneur_deals():
         ORDER BY d.updated_at DESC
     """, (email,))
     deals = cursor.fetchall()
-    
+
     # Get deal counts by stage
     cursor.execute("""
         SELECT deal_stage, COUNT(*) as count
@@ -705,22 +640,20 @@ def entrepreneur_deals():
         GROUP BY deal_stage
     """, (email,))
     stage_counts = {row['deal_stage']: row['count'] for row in cursor.fetchall()}
-    
+
+    # Profile for sidebar
+    profile = _get_entrepreneur_profile(cursor, email)
+
     cursor.close()
-    mycon.close()
-    
-    profile = get_entrepreneur_profile(email)
-    unread_msgs = get_unread_count(email)
-    unread_notifs = get_notification_count(email)
-    
+
     return render_template(
         'auth/entrepreneur/entrepreneur_deals.html',
         active_nav='deals',
         profile=profile,
         deals=deals,
         stage_counts=stage_counts,
-        unread_msgs=unread_msgs,
-        unread_notifs=unread_notifs
+        unread_msgs=get_unread_count(email),
+        unread_notifs=get_notification_count(email)
     )
 
 
@@ -732,14 +665,14 @@ def entrepreneur_deals():
 def log_profile_view(viewed_email):
     viewer_email = session.get('user_email')
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("INSERT INTO profile_view_logs (viewed_email, viewer_email) VALUES (%s, %s)",
                        (viewed_email, viewer_email))
         cursor.execute("UPDATE entrepreneur_profile SET profile_views = profile_views + 1 WHERE email = %s",
                        (viewed_email,))
-        mycon.commit()
-        cursor.close(); mycon.close()
+        conn.commit()
+        cursor.close()
         return jsonify({'success': True}), 200
     except Exception as e:
         print(f"❌ Profile view log error: {e}")

@@ -4,13 +4,11 @@ entrepreneur_feed_auth = Blueprint('entrepreneur_feed_auth', __name__)
 
 
 # =====================================================================
-# HELPERS
+# HELPERS — all use request-scoped connection
 # =====================================================================
 
-def get_entrepreneur_profile(email):
+def _get_entrepreneur_profile(cursor, email):
     """Fetch joined entrepreneur profile + login_data row."""
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.age, ld.gender,
@@ -22,16 +20,11 @@ def get_entrepreneur_profile(email):
         LEFT JOIN entrepreneur_profile ep ON ld.email = ep.email
         WHERE ld.email = %s
     """, (email,))
-    profile = cursor.fetchone()
-    cursor.close()
-    mycon.close()
-    return profile
+    return cursor.fetchone()
 
 
-def get_feed_posts(limit=20, offset=0):
+def _get_feed_posts(cursor, limit=20, offset=0):
     """Fetch pitch feed with author info, newest first."""
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             pp.post_id, pp.email, pp.title, pp.description,
@@ -48,16 +41,11 @@ def get_feed_posts(limit=20, offset=0):
         ORDER BY pp.created_at DESC
         LIMIT %s OFFSET %s
     """, (limit, offset))
-    posts = cursor.fetchall()
-    cursor.close()
-    mycon.close()
-    return posts
+    return cursor.fetchall()
 
 
-def get_message_threads(email):
+def _get_message_threads(cursor, email):
     """Get latest message per conversation partner for inbox sidebar."""
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             m.message_id,
@@ -92,43 +80,11 @@ def get_message_threads(email):
         ORDER BY m.sent_at DESC
         LIMIT 20
     """, (email, email, email, email))
-    threads = cursor.fetchall()
-    cursor.close()
-    mycon.close()
-    return threads
+    return cursor.fetchall()
 
 
-def get_unread_count(email):
-    """Count unread messages for navbar badge."""
-    mycon  = get_db_connection()
-    cursor = mycon.cursor()
-    cursor.execute(
-        "SELECT COUNT(*) FROM messages WHERE receiver_email = %s AND is_read = false",
-        (email,)
-    )
-    count = cursor.fetchone()[0]
-    cursor.close()
-    mycon.close()
-    return count
-
-
-def get_notification_count(email):
-    """Count unread notifications for navbar badge."""
-    mycon  = get_db_connection()
-    cursor = mycon.cursor()
-    cursor.execute(
-        "SELECT COUNT(*) FROM notifications WHERE email = %s AND is_read = false",
-        (email,)
-    )
-    count = cursor.fetchone()[0]
-    cursor.close()
-    mycon.close()
-    return count
-
-def get_profile_data(email):
+def _get_profile_data(cursor, email):
     """Fetch complete entrepreneur profile."""
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.created_at,
@@ -145,10 +101,8 @@ def get_profile_data(email):
         LEFT JOIN entrepreneur_profile ep ON ld.email = ep.email
         WHERE ld.email = %s
     """, (email,))
-    profile = cursor.fetchone()
-    cursor.close()
-    mycon.close()
-    return profile
+    return cursor.fetchone()
+
 
 def time_ago(dt):
     """Convert datetime to '2h ago' style string."""
@@ -176,9 +130,15 @@ def entrepreneur_feed():
     email = session.get('user_email')
     print(f"📊 Pitch Feed → {email}")
 
-    profile       = get_profile_data(email)
-    posts         = get_feed_posts(limit=20)
-    threads       = get_message_threads(email)
+    # ── Single connection for all queries ──
+    conn   = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    profile       = _get_profile_data(cursor, email)
+    posts         = _get_feed_posts(cursor, limit=20)
+    threads       = _get_message_threads(cursor, email)
+    cursor.close()
+
     unread_msgs   = get_unread_count(email)
     unread_notifs = get_notification_count(email)
 
@@ -219,8 +179,8 @@ def create_post():
         return jsonify({'success': False, 'message': 'Title and description are required.'}), 400
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO user_posts
                 (email, title, description,
@@ -235,10 +195,9 @@ def create_post():
             WHERE email = %s
         """, (email,))
 
-        mycon.commit()
+        conn.commit()
         post_id = cursor.lastrowid
         cursor.close()
-        mycon.close()
 
         print(f"✅ Pitch created: post_id={post_id} by {email}")
         return jsonify({'success': True, 'post_id': post_id}), 201
@@ -274,8 +233,8 @@ def interact_post(post_id):
     }
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
 
         # Upsert interaction (ignore duplicate)
         cursor.execute("""
@@ -292,9 +251,8 @@ def interact_post(post_id):
                 UPDATE user_posts SET {col} = {col} + 1 WHERE post_id = %s
             """, (post_id,))
 
-        mycon.commit()
+        conn.commit()
         cursor.close()
-        mycon.close()
         return jsonify({'success': True, 'toggled': toggled}), 200
 
     except Exception as e:
@@ -326,8 +284,8 @@ def edit_profile():
     }
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
 
         # Upsert profile row
         cursor.execute("""
@@ -347,9 +305,8 @@ def edit_profile():
               fields['location'],     fields['website_url'],
               fields['linkedin_url'], fields['twitter_url']))
 
-        mycon.commit()
+        conn.commit()
         cursor.close()
-        mycon.close()
         return jsonify({'success': True}), 200
 
     except Exception as e:
@@ -387,8 +344,8 @@ def edit_profile_full():
             funding_required = data.get('funding_amount')
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO entrepreneur_profile (
                 email, startup_name, bio, industry, location,
@@ -440,8 +397,8 @@ def edit_profile_full():
             data.get('demo_url','').strip()       or None,
             data.get('video_pitch_url','').strip() or None,
         ))
-        mycon.commit()
-        cursor.close(); mycon.close()
+        conn.commit()
+        cursor.close()
         print(f"✅ Full profile updated: {email}")
         return jsonify({'success': True}), 200
 
@@ -469,15 +426,14 @@ def send_message():
         return jsonify({'success': False, 'message': 'Receiver and message are required.'}), 400
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO messages (sender_email, receiver_email, message_text)
             VALUES (%s, %s, %s)
         """, (sender_email, receiver_email, message_text))
-        mycon.commit()
+        conn.commit()
         cursor.close()
-        mycon.close()
         return jsonify({'success': True}), 201
 
     except Exception as e:
@@ -500,16 +456,15 @@ def mark_messages_read():
     partner_email = data.get('partner_email', '').strip()
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             UPDATE messages
             SET is_read = true, read_at = NOW()
             WHERE receiver_email = %s AND sender_email = %s AND is_read = false
         """, (email, partner_email))
-        mycon.commit()
+        conn.commit()
         cursor.close()
-        mycon.close()
         return jsonify({'success': True}), 200
 
     except Exception as e:
@@ -528,7 +483,11 @@ def load_feed():
 
     offset = int(request.args.get('offset', 0))
     limit  = int(request.args.get('limit', 10))
-    posts  = get_feed_posts(limit=limit, offset=offset)
+
+    conn   = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    posts  = _get_feed_posts(cursor, limit=limit, offset=offset)
+    cursor.close()
 
     for p in posts:
         p['time_ago']  = time_ago(p['created_at'])
@@ -546,8 +505,8 @@ def log_profile_view(viewed_email):
     viewer_email = session.get('user_email')
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO profile_view_logs (viewed_email, viewer_email)
             VALUES (%s, %s)
@@ -559,9 +518,8 @@ def log_profile_view(viewed_email):
             WHERE email = %s
         """, (viewed_email,))
 
-        mycon.commit()
+        conn.commit()
         cursor.close()
-        mycon.close()
         return jsonify({'success': True}), 200
 
     except Exception as e:

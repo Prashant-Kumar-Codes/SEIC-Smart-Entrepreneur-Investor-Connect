@@ -14,8 +14,8 @@ def entrepreneur_profile():
     email = session.get('user_email')
     print(f"👤 My Profile → {email}")
 
-    mycon  = get_db_connection()
-    cursor = mycon.cursor(cursor_factory=RealDictCursor)
+    conn   = get_request_conn()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT
             ld.email, ld.username, ld.created_at,
@@ -33,7 +33,7 @@ def entrepreneur_profile():
         WHERE ld.email = %s
     """, (email,))
     profile = cursor.fetchone()
-    cursor.close(); mycon.close()
+    cursor.close()
 
     # Calculate completeness score (out of 8 fields)
     checks = [
@@ -88,8 +88,8 @@ def edit_profile_full():
             funding_required = data.get('funding_amount')
 
     try:
-        mycon  = get_db_connection()
-        cursor = mycon.cursor()
+        conn   = get_request_conn()
+        cursor = conn.cursor()
         
         # ✅ FIX 1: Update username in login_data table
         username = data.get('username', '').strip()
@@ -153,15 +153,13 @@ def edit_profile_full():
             data.get('demo_url','').strip()       or None,
             data.get('video_pitch_url','').strip() or None,
         ))
-        mycon.commit()
-        cursor.close(); mycon.close()
+        conn.commit()
+        cursor.close()
         print(f"✅ Full profile updated: {email}")
         
         # Trigger profile scoring (async-like, continue even if it fails)
         try:
-            new_con = get_db_connection()
-            result = compute_and_save_entrepreneur_profile_score(email, new_con)
-            new_con.close()
+            result = compute_and_save_entrepreneur_profile_score(email, conn)
             if result:
                 print(f"✅ Profile score updated for {email}")
             else:
