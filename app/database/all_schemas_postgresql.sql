@@ -12,8 +12,8 @@ CREATE DATABASE seic_db;
 -- 1. LOGIN_DATA - Users authentication
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS login_data (
-    id                  SERIAL PRIMARY KEY,
-    email               VARCHAR(255) PRIMARY KEY UNIQUE,
+    id                  SERIAL UNIQUE,
+    email               VARCHAR(255) PRIMARY KEY,
     username            VARCHAR(50) NOT NULL,
     age                 SMALLINT NOT NULL,
     role                VARCHAR(20) NOT NULL,
