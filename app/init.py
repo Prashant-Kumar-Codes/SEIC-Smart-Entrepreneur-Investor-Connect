@@ -8,8 +8,8 @@ import io
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
-# Import mail from extensions — the single source of truth
-from app.routes.extensions import mail
+# Import mail and DB teardown from extensions — the single source of truth
+from app.routes.extensions import mail, teardown_request_conn
 
 # Fix: Force UTF-8 encoding on Windows console output
 if sys.stdout.encoding != 'utf-8':
@@ -79,6 +79,11 @@ def create_app():
     # Initialise mail with the app (mail object lives in extensions.py)
     mail.init_app(app)
     logger.info("[OK] Flask-Mail initialised successfully")
+
+    # Register DB pool teardown — returns request-scoped connections to pool
+    app.teardown_appcontext(teardown_request_conn)
+    logger.info("[OK] DB connection pool teardown registered")
+
     logger.info(f"[MAIL] Mail Server: {app.config.get('MAIL_SERVER')}")
     logger.info(f"[ENV] Environment: {os.getenv('ENVIRONMENT', 'production')}")
 
